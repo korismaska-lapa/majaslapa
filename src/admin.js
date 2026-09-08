@@ -93,7 +93,7 @@ export const loginView = () => `
   </main>`;
 
 const stringFields = (content, language) => Object.entries(content.copy[language])
-  .filter(([, value]) => typeof value === "string")
+  .filter(([key, value]) => typeof value === "string" && !["conductorText1", "conductorText2", "conductorRole"].includes(key))
   .map(([key, value]) => `
     <label class="admin-field">
       <span>${escape(key)}</span>
@@ -220,7 +220,7 @@ const collectionView = (content) => {
     return listEditor({
       kind: "people",
       items: (content.people || []).map((item) => ({ raw: item, meta: item.occupation?.lv || item.occupation?.en || "", label: item.name })),
-      labels: { kicker: "Par kori", title: "Cilvēki", lead: "Pievieno kora cilvēkus lapai Par kori: foto, amats, vārds, iezīme un teksts. Foto uz lapas pārmaiņus ir pa kreisi un pa labi.", add: "Jauns cilvēks" },
+      labels: { kicker: "Par kori", title: "Cilvēki", lead: "Pirmais ieraksts ir Jānis Ozols lapas Par kori sākumā. Pārējiem foto pārmaiņus ir pa labi un pa kreisi.", add: "Jauns cilvēks" },
       emptyTitle: "Pievienot cilvēku",
       form: personForm
     });
@@ -295,6 +295,10 @@ const writeCollection = (updated, kind, items) => {
     return;
   }
   updated[kind] = items;
+  if (kind === "people" && items[0]) {
+    updated.details = { ...updated.details, conductor: items[0].name || updated.details.conductor };
+    updated.media = { ...updated.media, conductorPortrait: items[0].photo || updated.media.conductorPortrait };
+  }
 };
 
 const itemFromForm = (kind, data) => {

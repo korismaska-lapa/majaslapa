@@ -255,7 +255,24 @@
     "contactHero": "/media/IMG_2232.jpg",
     "conductorPortrait": "/media/JanisOzols.jpg"
   },
-  "people": [],
+  "people": [
+    {
+      "name": "Jānis Ozols",
+      "photo": "/media/JanisOzols.jpg",
+      "occupation": {
+        "lv": "Diriģents",
+        "en": "Conductor"
+      },
+      "label": {
+        "lv": "Diriģents un mākslinieciskais vadītājs",
+        "en": "Conductor and artistic director"
+      },
+      "text": {
+        "lv": "Jānis Ozols ir kora MASKA izveidotājs, diriģents un mākslinieciskais vadītājs kopš tā dibināšanas 2000. gadā. Viņa vadībā koris izaudzis par vienu no spilgtākajiem Latvijas amatieru koriem.\n\nJānis Ozols absolvējis Jāzepa Vītola Latvijas Mūzikas akadēmiju un par savu darbu saņēmis vairākas labākā diriģenta balvas starptautiskos konkursos.\n\nKora repertuārs aptver plašu mūzikas žanru loku — no garīgās līdz tautas mūzikai, no klasiskās līdz mūsdienu mūzikai, vienmēr meklējot jaunas interpretāciju iespējas.\n\nKoris sadarbojas ar Latvijā un pasaulē atzītiem mūziķiem — Rihardu Zaļupi, Renāti Stivriņu, Jāni Šipkēvicu, Vestardu Šimku un daudziem citiem.",
+        "en": "Jānis Ozols founded MASKA and has been its conductor and artistic director since 2000. Under his leadership, it has grown into one of Latvia’s most distinctive amateur choirs.\n\nA graduate of the Jāzeps Vītols Latvian Academy of Music, Jānis has received several best conductor awards at international competitions.\n\nThe repertoire spans a wide range of genres, from sacred to folk music and from classical to contemporary, always looking for new ways to interpret and enrich a performance.\n\nThe choir works with internationally recognised Latvian musicians, including Rihards Zaļupis, Renāte Stivriņa, Jānis Šipkēvics and Vestards Šimkus."
+      }
+    }
+  ],
   "achievements": {
     "lv": [
       {
