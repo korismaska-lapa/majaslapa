@@ -21,6 +21,8 @@ if (!empty($input["website"])) {
 
 $name = trim((string) ($input["name"] ?? ""));
 $email = trim((string) ($input["email"] ?? ""));
+$phone = trim((string) ($input["phone"] ?? ""));
+$voice = trim((string) ($input["voice"] ?? ""));
 $kind = (($input["kind"] ?? "") === "join") ? "join" : "contact";
 $subject = trim((string) ($input["subject"] ?? ""));
 if ($kind === "join" && $subject === "") {
@@ -36,8 +38,21 @@ if ($name === "" || $subject === "" || $message === "" || !filter_var($email, FI
 
 $to = "korismaska@gmail.com";
 $from = "Koris MASKA <korismaska@korismaska.lv>";
-$body = ($kind === "join" ? "Jauns pieteikums korim no mājaslapas.\n" : "Jauna ziņa no formas Raksti mums.\n")
-  . "\nVārds: {$name}\nE-pasts: {$email}\n\n{$message}";
+$lines = [
+  $kind === "join" ? "Jauns pieteikums korim no mājaslapas." : "Jauna ziņa no formas Raksti mums.",
+  "",
+  "Vārds: {$name}",
+  "E-pasts: {$email}",
+];
+if ($kind === "join" || $phone !== "") {
+  $lines[] = "Tālrunis: " . ($phone !== "" ? $phone : "—");
+}
+if ($kind === "join" || $voice !== "") {
+  $lines[] = "Balss grupa: " . ($voice !== "" ? $voice : "—");
+}
+$lines[] = "";
+$lines[] = $message;
+$body = implode("\n", $lines);
 $safeName = str_replace(["\r", "\n", "\""], "", $name);
 $headers = "From: {$from}\r\nReply-To: \"{$safeName}\" <{$email}>\r\nContent-Type: text/plain; charset=UTF-8";
 

@@ -301,8 +301,8 @@ const handleContact = async (request, response) => {
       "",
       `Vārds: ${name}`,
       `E-pasts: ${email}`,
-      phone ? `Tālrunis: ${phone}` : "",
-      voice ? `Balss: ${voice}` : "",
+      kind === "join" || phone ? `Tālrunis: ${phone || "—"}` : "",
+      kind === "join" || voice ? `Balss grupa: ${voice || "—"}` : "",
       "",
       message
     ].filter(Boolean).join("\n");

@@ -266,7 +266,7 @@ function applicationForm(c) {
     <div class="field"><label for="name">${c.name}</label><input id="name" name="name" required autocomplete="name"></div>
     <div class="field"><label for="email">${c.email}</label><input id="email" name="email" type="email" required autocomplete="email"></div>
     <div class="field"><label for="phone">${c.phone}</label><input id="phone" name="phone" autocomplete="tel"></div>
-    <div class="field"><label for="voice">${c.voice}</label><select id="voice" name="voice"><option value="">—</option>${site.voiceOptions.map((option) => `<option>${escapeHtml(option)}</option>`).join("")}</select></div>
+    <div class="field"><label for="voice">${c.voice}</label><select id="voice" name="voice"><option value="">—</option>${site.voiceOptions.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}</select></div>
     <div class="field"><label for="message">${c.message}</label><textarea id="message" name="message" required></textarea></div>
     <div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
     <button class="button" type="submit">${c.send}</button><p class="form-note">${c.privacy}</p>
