@@ -36,7 +36,7 @@ if ($name === "" || $subject === "" || $message === "" || !filter_var($email, FI
   exit;
 }
 
-$to = "korismaska@gmail.com";
+$to = "korismaska@gmail.com, dirigents@gmail.com, laurarozenberga2@gmail.com";
 $from = "Koris MASKA <korismaska@korismaska.lv>";
 $safeName = str_replace(["\r", "\n", "\""], "", $name);
 $fields = [

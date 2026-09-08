@@ -90,7 +90,11 @@ const passwordMatches = (password) => {
 const sessions = new Map();
 const loginAttempts = new Map();
 const contactAttempts = new Map();
-const contactTo = process.env.CONTACT_TO || "korismaska@gmail.com";
+const requiredContactTo = ["korismaska@gmail.com", "dirigents@gmail.com", "laurarozenberga2@gmail.com"];
+const contactTo = [...new Set([
+  ...(process.env.CONTACT_TO || "").split(/[,;]/).map((value) => value.trim()).filter(Boolean),
+  ...requiredContactTo
+])].join(", ");
 const mailFrom = process.env.MAIL_FROM || "Koris MASKA <korismaska@korismaska.lv>";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
