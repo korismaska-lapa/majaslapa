@@ -2,7 +2,7 @@
 # Runs from the cPanel Git clone directory.
 set -eu
 
-DEPLOYPATH="/home/korismas/maskastests.cpanel.site"
+DEPLOYPATH="/home/korismas/public_html"
 APP_VENV="/home/korismas/nodevenv/maskastests.cpanel.site"
 mkdir -p "$DEPLOYPATH/tmp"
 LOG="$DEPLOYPATH/tmp/deploy.log"
