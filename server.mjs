@@ -84,7 +84,7 @@ app.use("/media", express.static(join(root, "media")));
 app.use("/assets", express.static(join(root, "dist", "assets")));
 app.use("/assets", express.static(join(root, "assets")));
 app.use(express.static(join(root, "public")));
-app.use(express.static(root, { index: false }));
+app.use(express.static(root));
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "3mb" }));
