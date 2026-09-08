@@ -115,8 +115,8 @@ RewriteRule ^ index.html [L]
   PassengerEnabled off
 </FilesMatch>
 EOF
-    fi
-    if ! grep -q "send-mail" "$DEPLOYPATH/.htaccess"; then
+    elif ! grep -q "send-mail" "$DEPLOYPATH/.htaccess"; then
+      echo "Adding send-mail.php Passenger exception"
       cat >> "$DEPLOYPATH/.htaccess" << 'EOF'
 
 <FilesMatch "^send-mail\.php$">

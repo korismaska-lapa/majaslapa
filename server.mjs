@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
-import { createConnection } from "node:net";
 import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
@@ -45,7 +44,9 @@ const mailLog = join(root, "tmp", "mail-error.log");
 const encodeSubject = (value) => `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
 
 const runProcess = (command, args, input = "", env = {}) => new Promise((resolvePromise, reject) => {
-  const child = spawn(command, args, { env: { ...process.env, ...env } });
+  const child = spawn(command, args, {
+    env: { ...process.env, PATH: `/usr/sbin:/usr/bin:/bin:${process.env.PATH || ""}`, ...env }
+  });
   let stderr = "";
   child.stderr.on("data", (chunk) => { stderr += chunk; });
   child.on("error", reject);
@@ -92,64 +93,6 @@ const sendViaSendmail = async (message) => {
   return runProcess(bin, ["-i", "-t"], raw);
 };
 
-const sendViaSmtp = (message) => new Promise((resolvePromise, reject) => {
-  const socket = createConnection({ host: "127.0.0.1", port: 25 });
-  const commands = [
-    "HELO maska.local",
-    `MAIL FROM:<${addressOf(message.from)}>`,
-    `RCPT TO:<${addressOf(message.to)}>`,
-    "DATA",
-    null,
-    "QUIT"
-  ];
-  const payload = [
-    `From: ${message.from}`,
-    `To: ${message.to}`,
-    `Reply-To: ${message.replyTo}`,
-    `Subject: ${encodeSubject(message.subject)}`,
-    "MIME-Version: 1.0",
-    "Content-Type: text/plain; charset=UTF-8",
-    "",
-    message.text.replace(/^\./gm, ".."),
-    "."
-  ].join("\r\n");
-  let index = 0;
-  let buffer = "";
-  const timer = setTimeout(() => {
-    socket.destroy();
-    reject(new Error("smtp timeout"));
-  }, 15000);
-  socket.setEncoding("utf8");
-  socket.on("error", (error) => {
-    clearTimeout(timer);
-    reject(error);
-  });
-  socket.on("data", (chunk) => {
-    buffer += chunk;
-    const parts = buffer.split(/\r?\n/);
-    buffer = parts.pop() || "";
-    for (const line of parts) {
-      if (!/^\d{3}[ -]/.test(line) || line[3] === "-") continue;
-      const code = Number(line.slice(0, 3));
-      if (code >= 400) {
-        clearTimeout(timer);
-        socket.end();
-        reject(new Error(line));
-        return;
-      }
-      const next = commands[index];
-      index += 1;
-      if (next === undefined) {
-        clearTimeout(timer);
-        socket.end();
-        resolvePromise();
-        return;
-      }
-      socket.write(`${next === null ? payload : next}\r\n`);
-    }
-  });
-});
-
 const phpBins = [
   "/usr/local/bin/php",
   "/usr/bin/php",
@@ -168,15 +111,20 @@ const sendViaPhp = async (message) => {
 
 const sendContactMail = async (message) => {
   const errors = [];
-  const fromAddresses = [message.from, "Koris MASKA <korismas@localhost>"];
+  const user = process.env.USER || process.env.USERNAME || "korismas";
+  const fromAddresses = [
+    message.from,
+    `Koris MASKA <${user}@localhost>`,
+    `${user}@localhost`
+  ];
   for (const from of fromAddresses) {
     const payload = { ...message, from };
-    for (const send of [sendViaSendmail, sendViaSmtp, sendViaPhp]) {
+    for (const [label, send] of [["sendmail", sendViaSendmail], ["php", sendViaPhp]]) {
       try {
         await send(payload);
         return;
       } catch (error) {
-        errors.push(`${send.name}:${error.message}`);
+        errors.push(`${label}:${error.message}`);
       }
     }
   }
@@ -187,26 +135,8 @@ await mkdir(postsDirectory, { recursive: true });
 await mkdir(uploadsDirectory, { recursive: true });
 
 const app = express();
-
-app.use((request, response, next) => {
-  if (request.method === "GET" && !request.path.includes(".")) {
-    response.set("Cache-Control", "no-store, no-cache, must-revalidate");
-  }
-  next();
-});
-
-app.use("/media", express.static(join(root, "public", "media")));
-app.use("/media", express.static(join(root, "media")));
-app.use("/assets", express.static(join(root, "assets")));
-app.use(express.static(join(root, "public")));
-app.use(express.static(root));
-
 app.disable("x-powered-by");
 app.use(express.json({ limit: "3mb" }));
-app.use("/api", (_request, response, next) => {
-  response.set("Cache-Control", "no-store");
-  next();
-});
 
 const parseCookies = (header = "") => Object.fromEntries(header.split(";").map((part) => {
   const index = part.indexOf("=");
@@ -333,7 +263,7 @@ app.post("/api/logout", (request, response) => {
   response.json({ authenticated: false });
 });
 
-app.post("/api/contact", async (request, response) => {
+const handleContact = async (request, response) => {
   const logMail = async (line) => {
     try {
       await mkdir(join(root, "tmp"), { recursive: true });
@@ -391,7 +321,10 @@ app.post("/api/contact", async (request, response) => {
     await logMail(error.stack || String(error));
     response.status(500).json({ error: error.message || "The message could not be sent." });
   }
-});
+};
+
+app.post("/api/contact", handleContact);
+app.post("/send-mail.php", handleContact);
 
 app.put("/api/admin/site", requireAdmin, async (request, response, next) => {
   try {
@@ -456,6 +389,15 @@ app.post("/api/admin/upload", requireAdmin, upload.single("file"), (request, res
   response.status(201).json({ path: `/media/uploads/${request.file.filename}` });
 });
 
+app.use((request, response, next) => {
+  if (request.method === "GET" && !request.path.includes(".")) {
+    response.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  }
+  next();
+});
+app.use("/media", express.static(join(root, "public", "media")));
+app.use("/media", express.static(join(root, "media")));
+app.use("/assets", express.static(join(root, "assets")));
 if (dataRoot !== root) app.use(express.static(join(dataRoot, "public")));
 app.use(express.static(join(root, "public")));
 
@@ -470,7 +412,7 @@ if (!production) {
 }
 
 app.use((request, response, next) => {
-  if (request.method !== "GET" || request.path.startsWith("/api")) return next();
+  if (request.method !== "GET" || request.path.startsWith("/api") || request.path.endsWith(".php")) return next();
   const index = join(root, "index.html");
   if (!existsSync(index)) return next();
   response.set("Cache-Control", "no-store, no-cache, must-revalidate");

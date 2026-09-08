@@ -401,13 +401,14 @@ function bind() {
     note.classList.remove("ok", "error");
     try {
       const payloadBody = JSON.stringify({ kind: form.dataset.kind, ...values });
-      let response = await fetch("/send-mail.php", {
+      let response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payloadBody
       });
-      if (!response.ok) {
-        response = await fetch("/api/contact", {
+      const looksJson = (response.headers.get("content-type") || "").includes("json");
+      if (!looksJson) {
+        response = await fetch("/send-mail.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: payloadBody
