@@ -2,8 +2,8 @@
 # Runs from the cPanel Git clone directory.
 set -eu
 
-DEPLOYPATH="/home/korismas/public_html"
-APP_VENV="/home/korismas/nodevenv/public_html"
+DEPLOYPATH="/home/korismas/maskastests.cpanel.site"
+APP_VENV="/home/korismas/nodevenv/maskastests.cpanel.site"
 mkdir -p "$DEPLOYPATH/tmp"
 LOG="$DEPLOYPATH/tmp/deploy.log"
 exec >>"$LOG" 2>&1
@@ -131,19 +131,17 @@ fi
 pick_node() {
   NPM=""
   NODE=""
-  for venv in "$APP_VENV" /home/korismas/nodevenv/maskastests.cpanel.site; do
-    for version in 22 20 18 16; do
-      if [ -x "$venv/$version/bin/npm" ]; then
-        NPM="$venv/$version/bin/npm"
-        NODE="$venv/$version/bin/node"
-        return 0
-      fi
-      if [ -x "$venv/$version/bin/node" ]; then
-        NODE="$venv/$version/bin/node"
-        [ -x "$venv/$version/bin/npm" ] && NPM="$venv/$version/bin/npm"
-        return 0
-      fi
-    done
+  for version in 22 20 18 16; do
+    if [ -x "$APP_VENV/$version/bin/npm" ]; then
+      NPM="$APP_VENV/$version/bin/npm"
+      NODE="$APP_VENV/$version/bin/node"
+      return 0
+    fi
+    if [ -x "$APP_VENV/$version/bin/node" ]; then
+      NODE="$APP_VENV/$version/bin/node"
+      [ -x "$APP_VENV/$version/bin/npm" ] && NPM="$APP_VENV/$version/bin/npm"
+      return 0
+    fi
   done
   for candidate in \
     /opt/alt/alt-nodejs22/root/usr/bin/npm \
