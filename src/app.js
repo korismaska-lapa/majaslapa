@@ -309,6 +309,7 @@ function join() {
     <section class="section contact-grid">
       <div>
         <h2 class="section-title">${c.whatToExpect}</h2>
+        <div class="rule"></div>
         <div class="join-card">
           <div class="join-expect">
             <div class="contact-item"><span>01</span><strong>${c.expectation1}</strong></div>
@@ -319,6 +320,7 @@ function join() {
       </div>
       <div>
         <h2 class="section-title">${c.formTitle}</h2>
+        <div class="rule"></div>
         <div class="join-card">${applicationForm(c)}</div>
       </div>
     </section>
