@@ -20,13 +20,17 @@ const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
   || "scrypt:wzHRC3pAj6v6GykkIPoK8g==:r9xVORSiOZ8sVbR3tn22MtXE90d0GDMJbpxNC5LhkWfahP6IIp6m03rVtAbfVr0Je0OCtT4NkYsGM98yC6IS0w==";
 const passwordMatches = (password) => {
-  const parts = String(adminPasswordHash).split(":");
-  if (parts[0] !== "scrypt" || parts.length !== 3) return false;
-  const salt = Buffer.from(parts[1], "base64");
-  const expected = Buffer.from(parts[2], "base64");
-  if (!salt.length || expected.length !== 64) return false;
-  const actual = crypto.scryptSync(String(password || ""), salt, expected.length, { N: 16384, r: 8, p: 1 });
-  return crypto.timingSafeEqual(actual, expected);
+  try {
+    const parts = String(adminPasswordHash).split(":");
+    if (parts[0] !== "scrypt" || parts.length !== 3) return false;
+    const salt = Buffer.from(parts[1], "base64");
+    const expected = Buffer.from(parts[2], "base64");
+    if (!salt.length || expected.length !== 64) return false;
+    const actual = crypto.scryptSync(String(password || ""), salt, expected.length, { N: 16384, r: 8, p: 1 });
+    return crypto.timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
 };
 
 const copyIfMissing = async (from, to) => {
@@ -482,6 +486,10 @@ if (!production) {
     console.warn("Vite is not available; using the production HTML fallback.");
   }
 }
+
+app.use("/api", (request, response) => {
+  response.status(404).json({ error: `Unknown API route ${request.method} ${request.path}` });
+});
 
 app.use((request, response, next) => {
   if (request.method !== "GET" || request.path.startsWith("/api") || request.path.endsWith(".php")) return next();

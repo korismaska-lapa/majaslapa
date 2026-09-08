@@ -98,6 +98,7 @@ if [ -f "$HTACCESS" ]; then
 # MASKA SPA
 <IfModule mod_rewrite.c>
 RewriteEngine On
+RewriteCond %{REQUEST_METHOD} GET
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/send-mail\.php
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -105,6 +106,10 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [L]
 </IfModule>
 EOF
+  fi
+  if grep -q "MASKA SPA" "$HTACCESS" && ! grep -q "REQUEST_METHOD" "$HTACCESS"; then
+    echo "SPA rewrite GET-only so /api is never HTML"
+    sed -i "s/RewriteEngine On/RewriteEngine On\\nRewriteCond %{REQUEST_METHOD} GET/" "$HTACCESS"
   fi
   if ! grep -q 'PassengerEnabled off' "$HTACCESS"; then
     echo "Letting Apache/PHP handle send-mail.php (Node is not required for the form)"

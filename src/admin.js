@@ -11,7 +11,18 @@ const request = async (url, options = {}) => {
     ...options,
     headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
   });
-  const result = response.status === 204 ? null : await response.json();
+  if (response.status === 204) return null;
+  const text = await response.text();
+  let result = null;
+  if (text) {
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new Error(text.trim().startsWith("<")
+        ? "Serveris neatbild. cPanel Setup Node.js App pārslēdz lietotni uz Node 20 un deployē vēlreiz."
+        : "Nederīga servera atbilde.");
+    }
+  }
   if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
   return result;
 };

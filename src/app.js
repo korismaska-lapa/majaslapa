@@ -334,7 +334,9 @@ async function loadContent() {
   try {
     const response = await fetch("/api/content", { cache: "no-store" });
     if (!response.ok) return;
-    const content = await response.json();
+    const text = await response.text();
+    if (!text.startsWith("{") && !text.startsWith("[")) return;
+    const content = JSON.parse(text);
     site = content.site;
     copy = site.copy;
     posts = content.posts;
