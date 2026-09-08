@@ -2,7 +2,7 @@ import "./styles.css";
 import { posts as builtInPosts } from "./posts.js";
 import defaultSite from "../content/site.json";
 import defaultVoiceTracks from "../content/voices.json";
-import { adminView, bindAdmin, bindLogin, loginView } from "./admin.js";
+import { adminView, bindAdmin, bindLogin, loginView, request } from "./admin.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -331,18 +331,21 @@ function contact() {
 }
 
 async function loadContent() {
-  try {
-    const response = await fetch("/api/content", { cache: "no-store" });
-    if (!response.ok) return;
-    const text = await response.text();
-    if (!text.startsWith("{") && !text.startsWith("[")) return;
-    const content = JSON.parse(text);
-    site = content.site;
-    copy = site.copy;
-    posts = content.posts;
-    voiceTracks = content.voices || voiceTracks;
-  } catch {
-    // The bundled content remains available for static previews.
+  for (const url of ["/content-api.php", "/api/content"]) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) continue;
+      const text = await response.text();
+      if (!text.startsWith("{") && !text.startsWith("[")) continue;
+      const content = JSON.parse(text);
+      site = content.site;
+      copy = site.copy;
+      posts = content.posts;
+      voiceTracks = content.voices || voiceTracks;
+      return;
+    } catch {
+      // Try the PHP copy of the same JSON if Node/Passenger is down.
+    }
   }
 }
 
@@ -490,8 +493,8 @@ async function bootstrap() {
   render();
   await loadContent();
   try {
-    const response = await fetch("/api/session", { cache: "no-store" });
-    if (response.ok) state.adminAuthenticated = Boolean((await response.json()).authenticated);
+    const session = await request("/api/session");
+    state.adminAuthenticated = Boolean(session?.authenticated);
   } catch {}
   if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
   render(true);

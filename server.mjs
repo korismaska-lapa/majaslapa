@@ -17,16 +17,14 @@ const uploadsDirectory = join(dataRoot, "public", "media", "uploads");
 const port = Number(process.env.PORT) || 5173;
 const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 
-const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
-  || "scrypt:wzHRC3pAj6v6GykkIPoK8g==:r9xVORSiOZ8sVbR3tn22MtXE90d0GDMJbpxNC5LhkWfahP6IIp6m03rVtAbfVr0Je0OCtT4NkYsGM98yC6IS0w==";
+const adminPasswordEncoded = process.env.ADMIN_PASSWORD_B64 || "VGFzdHVuZGFuYWshITExMQ==";
 const passwordMatches = (password) => {
   try {
-    const parts = String(adminPasswordHash).split(":");
-    if (parts[0] !== "scrypt" || parts.length !== 3) return false;
-    const salt = Buffer.from(parts[1], "base64");
-    const expected = Buffer.from(parts[2], "base64");
-    if (!salt.length || expected.length !== 64) return false;
-    const actual = crypto.scryptSync(String(password || ""), salt, expected.length, { N: 16384, r: 8, p: 1 });
+    const expected = process.env.ADMIN_PASSWORD
+      ? Buffer.from(String(process.env.ADMIN_PASSWORD), "utf8")
+      : Buffer.from(adminPasswordEncoded, "base64");
+    const actual = Buffer.from(String(password || ""), "utf8");
+    if (!expected.length || expected.length !== actual.length) return false;
     return crypto.timingSafeEqual(actual, expected);
   } catch {
     return false;

@@ -6,25 +6,67 @@ const escape = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 })[char]);
 
-const request = async (url, options = {}) => {
-  const response = await fetch(url, {
-    ...options,
-    headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
-  });
+const phpUrl = (url) => {
+  if (url === "/api/content") return "/content-api.php";
+  if (url === "/api/login") return "/admin-api.php?r=login";
+  if (url === "/api/logout") return "/admin-api.php?r=logout";
+  if (url === "/api/session") return "/admin-api.php?r=session";
+  if (url === "/api/admin/site") return "/admin-api.php?r=site";
+  if (url === "/api/admin/upload") return "/admin-api.php?r=upload";
+  if (url === "/api/admin/posts") return "/admin-api.php?r=posts";
+  const post = url.match(/^\/api\/admin\/posts\/([^/?#]+)$/);
+  if (post) return `/admin-api.php?r=posts&id=${encodeURIComponent(post[1])}`;
+  return null;
+};
+
+class ApiError extends Error {
+  constructor(message, { fromJson = false } = {}) {
+    super(message);
+    this.fromJson = fromJson;
+  }
+}
+
+const parseApiResponse = async (response) => {
   if (response.status === 204) return null;
   const text = await response.text();
-  let result = null;
-  if (text) {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    if (!response.ok) throw new ApiError(`Request failed (${response.status})`);
+    return null;
+  }
+  if (trimmed[0] !== "{" && trimmed[0] !== "[") {
+    throw new ApiError("Serveris neatbild.");
+  }
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch {
+    throw new ApiError("Nederīga servera atbilde.");
+  }
+  if (!response.ok) throw new ApiError(result?.error || `Request failed (${response.status})`, { fromJson: true });
+  return result;
+};
+
+export const request = async (url, options = {}) => {
+  const init = {
+    ...options,
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
+  };
+  const tryUrl = async (target) => parseApiResponse(await fetch(target, init));
+  const php = phpUrl(url);
+  const order = php ? [php, url] : [url];
+  let lastError;
+  for (const target of order) {
     try {
-      result = JSON.parse(text);
-    } catch {
-      throw new Error(text.trim().startsWith("<")
-        ? "Serveris neatbild. cPanel Setup Node.js App pārslēdz lietotni uz Node 20 un deployē vēlreiz."
-        : "Nederīga servera atbilde.");
+      return await tryUrl(target);
+    } catch (error) {
+      if (error.fromJson) throw error;
+      lastError = error instanceof ApiError ? error : new ApiError("Serveris neatbild.");
     }
   }
-  if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
-  return result;
+  throw lastError;
 };
 
 const youtubeId = (value = "") => {
