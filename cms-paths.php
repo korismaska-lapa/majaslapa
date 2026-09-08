@@ -11,6 +11,23 @@ function maska_content_dir($root) {
   if (!is_file($live . "/voices.json") && is_file($seed . "/voices.json")) {
     @copy($seed . "/voices.json", $live . "/voices.json");
   }
+  if (is_file($live . "/site.json")) {
+    $site = json_decode(@file_get_contents($live . "/site.json"), true);
+    $copyChanged = false;
+    if (is_array($site)) {
+      if (($site["copy"]["lv"]["listen"] ?? "") === "Klausies kori") {
+        $site["copy"]["lv"]["listen"] = "Mūsu darbi";
+        $copyChanged = true;
+      }
+      if (($site["copy"]["en"]["listen"] ?? "") === "Listen to the choir") {
+        $site["copy"]["en"]["listen"] = "Our music";
+        $copyChanged = true;
+      }
+      if ($copyChanged) {
+        @file_put_contents($live . "/site.json", json_encode($site, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n");
+      }
+    }
+  }
   $marker = $live . "/.initialized";
   $livePosts = glob($live . "/posts/*.json") ?: [];
   if (!is_file($marker) && !$livePosts) {

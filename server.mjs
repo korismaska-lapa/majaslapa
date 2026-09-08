@@ -35,6 +35,19 @@ if (!existsSync(initializedMarker)) await writeFile(initializedMarker, `${Date.n
 
 const siteFile = join(liveContent, "site.json");
 const voicesFile = join(liveContent, "voices.json");
+if (existsSync(siteFile)) {
+  const liveSite = JSON.parse(await readFile(siteFile, "utf8"));
+  let copyChanged = false;
+  if (liveSite.copy?.lv?.listen === "Klausies kori") {
+    liveSite.copy.lv.listen = "Mūsu darbi";
+    copyChanged = true;
+  }
+  if (liveSite.copy?.en?.listen === "Listen to the choir") {
+    liveSite.copy.en.listen = "Our music";
+    copyChanged = true;
+  }
+  if (copyChanged) await writeFile(siteFile, `${JSON.stringify(liveSite, null, 2)}\n`);
+}
 const postsDirectory = join(liveContent, "posts");
 const uploadsDirectory = join(root, "media", "uploads");
 const publicUploadsDirectory = join(root, "public", "media", "uploads");

@@ -155,7 +155,7 @@ function home() {
     <main id="main">
       <section class="hero" style="--home-hero:url('${site.media.homeHero}')">
         <div class="hero-content"><p class="eyebrow">${c.heroEyebrow}</p><h1>${c.heroTitle}</h1><p class="lead">${c.heroLead}</p>
-          <div class="button-row"><a class="button" href="${href("music")}" data-route>${c.listen}</a><a class="button secondary" href="${href("join")}" data-route>${c.join}</a></div>
+          <div class="button-row"><a class="button" href="${href("join")}" data-route>${c.join}</a><a class="button secondary" href="${href("music")}" data-route>${c.listen}</a></div>
         </div>
       </section>
       <section class="section home-about">
