@@ -241,7 +241,7 @@ button { cursor: pointer; }
   min-width: 0;
 }
 .home-about-copy .prose p:last-child { margin-bottom: 0; }
-.home-about-copy .text-link { margin-top: 8px; }
+.home-about-copy .text-link { margin-top: 24px; }
 .prose-lead { margin: 0 0 18px; color: var(--ink); font-size: 18px; font-weight: 600; line-height: 1.65; }
 .prose { max-width: 72ch; font-size: 15px; line-height: 1.78; text-align: justify; text-wrap: pretty; }
 .section > .prose { margin-inline: auto; }
