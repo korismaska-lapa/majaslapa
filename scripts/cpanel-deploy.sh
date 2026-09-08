@@ -46,7 +46,7 @@ fi
 
 # tar of "." can leave the site folder as 700, which Apache/LiteSpeed serves as 403
 chmod 755 "$DEPLOYPATH"
-chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" 2>/dev/null || true
+chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" "$DEPLOYPATH/send-mail.php" 2>/dev/null || true
 if [ -f "$DEPLOYPATH/.htaccess" ]; then
   chmod 644 "$DEPLOYPATH/.htaccess"
 fi
@@ -88,19 +88,12 @@ done
 cd "$DEPLOYPATH"
 rm -rf "$DEPLOYPATH/dist"
 rm -f "$DEPLOYPATH/assets/index-CP4zyoKn.js" "$DEPLOYPATH/assets/index-DLStGuYu.css"
-printf '%s\n' "maska-build form2" "$(date -Iseconds)" > "$DEPLOYPATH/deploy-check.txt"
-echo "index.html -> $(grep -o 'index-[A-Za-z0-9_-]*\.js' "$DEPLOYPATH/index.html" || echo missing)"
-if [ -n "$NPM" ]; then
-  echo "Using $($NODE -v) / npm $($NPM -v)"
-  PATH="$(dirname "$NPM"):$PATH"
-  export PATH
-  $NPM install --omit=dev --no-audit --no-fund --no-progress
-  if [ -f "$DEPLOYPATH/.htaccess" ]; then
-    echo "Pointing Passenger at $NODE"
-    sed -i "s|^PassengerNodejs \".*\"|PassengerNodejs \"$NODE\"|" "$DEPLOYPATH/.htaccess"
-    if ! grep -q "MASKA SPA" "$DEPLOYPATH/.htaccess"; then
-      echo "Adding SPA rewrite for inner pages"
-      cat >> "$DEPLOYPATH/.htaccess" << 'EOF'
+
+HTACCESS="$DEPLOYPATH/.htaccess"
+if [ -f "$HTACCESS" ]; then
+  if ! grep -q "MASKA SPA" "$HTACCESS"; then
+    echo "Adding SPA rewrite for inner pages"
+    cat >> "$HTACCESS" << 'EOF'
 
 # MASKA SPA
 <IfModule mod_rewrite.c>
@@ -111,26 +104,45 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [L]
 </IfModule>
-<FilesMatch "^send-mail\.php$">
-  PassengerEnabled off
-</FilesMatch>
 EOF
-    elif ! grep -q "send-mail" "$DEPLOYPATH/.htaccess"; then
-      echo "Adding send-mail.php Passenger exception"
-      cat >> "$DEPLOYPATH/.htaccess" << 'EOF'
+  fi
+  if ! grep -q 'PassengerEnabled off' "$HTACCESS"; then
+    echo "Letting Apache/PHP handle send-mail.php (Node is not required for the form)"
+    cat >> "$HTACCESS" << 'EOF'
 
 <FilesMatch "^send-mail\.php$">
   PassengerEnabled off
 </FilesMatch>
 EOF
-    fi
   fi
+fi
+
+{
+  echo "maska-build form6"
+  date -Iseconds
+  echo "index.html -> $(grep -o 'index-[A-Za-z0-9_-]*\.js' "$DEPLOYPATH/index.html" || echo missing)"
+  echo "node=$NODE"
+  echo "npm=$NPM"
+  if [ -z "$NODE" ]; then
+    echo "NEED_NODE20: open cPanel Setup Node.js App, switch this app from Node 10 to Node 20, Save, then deploy again."
+  fi
+  echo "Passenger: $(grep PassengerNodejs "$HTACCESS" 2>/dev/null || echo missing)"
+} > "$DEPLOYPATH/deploy-check.txt"
+
+if [ -n "$NPM" ]; then
+  echo "Using $($NODE -v) / npm $($NPM -v)"
+  PATH="$(dirname "$NPM"):$PATH"
+  export PATH
+  if [ -f "$HTACCESS" ]; then
+    echo "Pointing Passenger at $NODE"
+    sed -i "s|PassengerNodejs \".*\"|PassengerNodejs \"$NODE\"|" "$HTACCESS"
+  fi
+  $NPM install --omit=dev --no-audit --no-fund --no-progress
 else
   echo "ERROR: Node 16+ was not found. In cPanel open Setup Node.js App and switch this app from Node 10 to Node 20, then deploy again."
-  exit 1
 fi
 
 /bin/touch "$DEPLOYPATH/tmp/restart.txt"
 echo "Permissions: $(ls -ld "$DEPLOYPATH")"
-echo "Passenger: $(grep PassengerNodejs "$DEPLOYPATH/.htaccess" 2>/dev/null || true)"
+echo "Passenger: $(grep PassengerNodejs "$HTACCESS" 2>/dev/null || true)"
 echo "=== $(date -Iseconds) deploy ok ==="

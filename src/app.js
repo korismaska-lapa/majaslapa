@@ -401,21 +401,29 @@ function bind() {
     note.classList.remove("ok", "error");
     try {
       const payloadBody = JSON.stringify({ kind: form.dataset.kind, ...values });
-      let response = await fetch("/api/contact", {
+      const readJson = async (response) => {
+        const text = await response.text();
+        try {
+          return { ok: response.ok, data: JSON.parse(text) };
+        } catch {
+          return { ok: false, data: null };
+        }
+      };
+      let result = await readJson(await fetch("/send-mail.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payloadBody
-      });
-      const looksJson = (response.headers.get("content-type") || "").includes("json");
-      if (!looksJson) {
-        response = await fetch("/send-mail.php", {
+      }));
+      if (!result.data) {
+        result = await readJson(await fetch("/api/contact", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: payloadBody
-        });
+        }));
       }
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "send failed");
+      if (!result.ok || !result.data?.sent) {
+        throw new Error(result.data?.error || "send failed");
+      }
       form.reset();
       note.textContent = t().formSent;
       note.classList.add("ok");

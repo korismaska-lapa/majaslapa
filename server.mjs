@@ -131,8 +131,8 @@ const sendContactMail = async (message) => {
   throw new Error(errors.join(" | "));
 };
 
-await mkdir(postsDirectory, { recursive: true });
-await mkdir(uploadsDirectory, { recursive: true });
+await mkdir(postsDirectory, { recursive: true }).catch((error) => console.error("posts dir", error));
+await mkdir(uploadsDirectory, { recursive: true }).catch((error) => console.error("uploads dir", error));
 
 const app = express();
 app.disable("x-powered-by");
@@ -426,8 +426,13 @@ app.use((error, _request, response, _next) => {
   response.status(error.status || 500).json({ error: error.message || "Server error" });
 });
 
-app.listen(port, host, () => {
-  console.log(`MASKA site running at http://127.0.0.1:${port}`);
-  if (host === "0.0.0.0") console.log(`Other devices on the same network: http://<this-PC-IPv4>:${port}`);
-  if (!process.env.ADMIN_PASSWORD) console.log("Admin /login uses the local default password.");
-});
+if (typeof globalThis.PhusionPassenger !== "undefined") {
+  globalThis.PhusionPassenger.configure({ autoInstall: false });
+  app.listen("passenger");
+} else {
+  app.listen(port, host, () => {
+    console.log(`MASKA site running at http://127.0.0.1:${port}`);
+    if (host === "0.0.0.0") console.log(`Other devices on the same network: http://<this-PC-IPv4>:${port}`);
+    if (!process.env.ADMIN_PASSWORD) console.log("Admin /login uses the local default password.");
+  });
+}
