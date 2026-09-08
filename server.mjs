@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import express from "express";
 import multer from "multer";
+import nodemailer from "nodemailer";
 
 const root = resolve(".");
 const production = process.argv.includes("--production") || process.env.NODE_ENV === "production";
@@ -32,19 +33,58 @@ if (dataRoot !== root) {
 }
 const sessions = new Map();
 const loginAttempts = new Map();
+const contactAttempts = new Map();
+const contactTo = process.env.CONTACT_TO || "korismaska@gmail.com";
+const mailFrom = process.env.MAIL_FROM || "Koris MASKA <korismaska@korismaska.lv>";
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const clip = (value, max) => String(value || "").trim().slice(0, max);
+
+const createMailTransport = () => {
+  if (process.env.SMTP_HOST) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS || "" } : undefined
+    });
+  }
+  return nodemailer.createTransport({
+    sendmail: true,
+    newline: "unix",
+    path: process.env.SENDMAIL_PATH || "/usr/sbin/sendmail"
+  });
+};
+
+const sendContactMail = async (message) => {
+  try {
+    await createMailTransport().sendMail(message);
+  } catch (sendmailError) {
+    if (process.env.SMTP_HOST) throw sendmailError;
+    try {
+      await nodemailer.createTransport({
+        host: "127.0.0.1",
+        port: 25,
+        secure: false,
+        tls: { rejectUnauthorized: false }
+      }).sendMail(message);
+    } catch {
+      throw sendmailError;
+    }
+  }
+};
 
 await mkdir(postsDirectory, { recursive: true });
 await mkdir(uploadsDirectory, { recursive: true });
 
 const app = express();
 
-// Izmantojam projektā jau definēto 'root' mainīgo, lai izveidotu absolūtos ceļus uz mapēm
 app.use("/media", express.static(join(root, "public", "media")));
-app.use("/assets", express.static(join(root, "assets")));
-
-// Ja gadījumā daļa bilžu palika dist mapē
 app.use("/media", express.static(join(root, "media")));
-app.use(express.static(root));
+app.use("/assets", express.static(join(root, "dist", "assets")));
+app.use("/assets", express.static(join(root, "assets")));
+app.use(express.static(join(root, "public")));
+app.use(express.static(root, { index: false }));
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "3mb" }));
@@ -176,6 +216,64 @@ app.post("/api/logout", (request, response) => {
   if (token) sessions.delete(token);
   response.set("Set-Cookie", sessionCookie(request, ""));
   response.json({ authenticated: false });
+});
+
+app.post("/api/contact", async (request, response, next) => {
+  try {
+    const origin = request.headers.origin;
+    if (origin) {
+      try {
+        if (new URL(origin).host !== request.headers.host) {
+          return response.status(403).json({ error: "Origin rejected" });
+        }
+      } catch {
+        return response.status(403).json({ error: "Origin rejected" });
+      }
+    }
+
+    const key = request.ip;
+    const attempt = contactAttempts.get(key) || { count: 0, reset: Date.now() + 10 * 60 * 1000 };
+    if (attempt.reset < Date.now()) Object.assign(attempt, { count: 0, reset: Date.now() + 10 * 60 * 1000 });
+    attempt.count += 1;
+    contactAttempts.set(key, attempt);
+    if (attempt.count > 8) return response.status(429).json({ error: "Too many messages. Try again later." });
+
+    const kind = request.body?.kind === "join" ? "join" : "contact";
+    if (clip(request.body?.website, 80)) return response.json({ sent: true });
+
+    const name = clip(request.body?.name, 120);
+    const email = clip(request.body?.email, 120).toLowerCase();
+    const subject = kind === "join" ? `Pieteikums korim — ${name}` : clip(request.body?.subject, 200);
+    const message = clip(request.body?.message, 5000);
+    const phone = clip(request.body?.phone, 40);
+    const voice = clip(request.body?.voice, 80);
+    if (!name || !emailPattern.test(email) || !subject || !message) {
+      return response.status(400).json({ error: "Please complete all required fields." });
+    }
+
+    const lines = [
+      kind === "join" ? "Jauns pieteikums korim no mājaslapas." : "Jauna ziņa no mājaslapas formas «Raksti mums».",
+      "",
+      `Vārds: ${name}`,
+      `E-pasts: ${email}`,
+      phone ? `Tālrunis: ${phone}` : "",
+      voice ? `Balss: ${voice}` : "",
+      "",
+      message
+    ].filter(Boolean).join("\n");
+
+    await sendContactMail({
+      from: mailFrom,
+      to: contactTo,
+      replyTo: `${name} <${email}>`,
+      subject,
+      text: lines
+    });
+    response.json({ sent: true });
+  } catch (error) {
+    console.error(error);
+    response.status(500).json({ error: "The message could not be sent." });
+  }
 });
 
 app.put("/api/admin/site", requireAdmin, async (request, response, next) => {

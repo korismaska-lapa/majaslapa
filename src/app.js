@@ -268,6 +268,7 @@ function applicationForm(c) {
     <div class="field"><label for="phone">${c.phone}</label><input id="phone" name="phone" autocomplete="tel"></div>
     <div class="field"><label for="voice">${c.voice}</label><select id="voice" name="voice"><option value="">—</option>${site.voiceOptions.map((option) => `<option>${escapeHtml(option)}</option>`).join("")}</select></div>
     <div class="field"><label for="message">${c.message}</label><textarea id="message" name="message" required></textarea></div>
+    <div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
     <button class="button" type="submit">${c.send}</button><p class="form-note">${c.privacy}</p>
   </form>`;
 }
@@ -279,7 +280,7 @@ function contact() {
     ${pageHero(c.contactEyebrow, c.contact, c.contactPageLead, site.media.contactHero)}
     <section class="section contact-grid">
       <div><h2 class="section-title">${c.contact}</h2><div class="rule"></div><div class="contact-list"><div class="contact-item"><span>${c.general}</span><a href="mailto:${d.generalEmail}">${d.generalEmail}</a></div><div class="contact-item"><span>${c.president}</span><strong>${d.president}</strong><br><a href="mailto:${d.presidentEmail}">${d.presidentEmail}</a> · <a href="tel:${d.phoneHref}">${d.phone}</a></div><div class="contact-item"><span>${c.social}</span><a href="${d.facebook}" target="_blank">Facebook — Koris MASKA</a><br><a href="${d.instagram}" target="_blank">Instagram — @korismaska</a></div><div class="contact-item"><span>${c.location}</span><a href="${d.mapUrl}" target="_blank">${d.address}</a></div></div></div>
-      <div><h2 class="section-title">${c.writeUs}</h2><div class="rule"></div><form class="form mail-form" data-kind="contact"><div class="field"><label for="contact-name">${c.name}</label><input id="contact-name" name="name" required autocomplete="name"></div><div class="field"><label for="contact-email">${c.email}</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="subject">${c.subject}</label><input id="subject" name="subject" required></div><div class="field"><label for="contact-message">${c.question}</label><textarea id="contact-message" name="message" required></textarea></div><button class="button" type="submit">${c.sendMessage}</button><p class="form-note">${c.privacy}</p></form></div>
+      <div><h2 class="section-title">${c.writeUs}</h2><div class="rule"></div><form class="form mail-form" data-kind="contact"><div class="field"><label for="contact-name">${c.name}</label><input id="contact-name" name="name" required autocomplete="name"></div><div class="field"><label for="contact-email">${c.email}</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="subject">${c.subject}</label><input id="subject" name="subject" required></div><div class="field"><label for="contact-message">${c.question}</label><textarea id="contact-message" name="message" required></textarea></div><div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit">${c.sendMessage}</button><p class="form-note">${c.privacy}</p></form></div>
     </section>
   </main>`;
 }
@@ -391,14 +392,30 @@ function bind() {
   };
   voiceSearch?.addEventListener("input", filterVoices);
   voiceCollection?.addEventListener("change", filterVoices);
-  document.querySelectorAll(".mail-form").forEach((form) => form.addEventListener("submit", (event) => {
+  document.querySelectorAll(".mail-form").forEach((form) => form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const note = form.querySelector(".form-note");
+    const button = form.querySelector("button[type=submit]");
     const values = Object.fromEntries(new FormData(form));
-    const subject = form.dataset.kind === "join" ? `Pieteikums korim — ${values.name}` : values.subject;
-    const body = form.dataset.kind === "join"
-      ? `${t().name}: ${values.name}\n${t().email}: ${values.email}\n${t().phone}: ${values.phone}\n${t().voice}: ${values.voice}\n\n${values.message}`
-      : `${t().name}: ${values.name}\n${t().email}: ${values.email}\n\n${values.message}`;
-    location.href = `mailto:${site.details.generalEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    button.disabled = true;
+    note.classList.remove("ok", "error");
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: form.dataset.kind, ...values })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "send failed");
+      form.reset();
+      note.textContent = t().formSent;
+      note.classList.add("ok");
+    } catch {
+      note.textContent = t().formError;
+      note.classList.add("error");
+    } finally {
+      button.disabled = false;
+    }
   }));
 }
 
