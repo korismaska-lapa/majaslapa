@@ -187,7 +187,7 @@ function personCard(person, index) {
   const text = person.text?.[state.lang] || person.text?.lv || "";
   const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
   return `<section class="section story-grid ${index % 2 === 1 ? "flip" : ""}">
-    <div>${mediaImg(person.photo, person.name, "portrait")}</div>
+    <div class="portrait-wrap">${mediaImg(person.photo, person.name, "portrait")}</div>
     <div class="leader-card">
       ${occupation ? `<p class="eyebrow">${escapeHtml(occupation)}</p>` : ""}
       <h2>${escapeHtml(person.name)}</h2>
