@@ -40,7 +40,7 @@ const mailFrom = process.env.MAIL_FROM || "Koris MASKA <korismaska@korismaska.lv
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const clip = (value, max) => String(value || "").trim().slice(0, max);
-const mailLog = join(dataRoot, "tmp", "mail-error.log");
+const mailLog = join(root, "tmp", "mail-error.log");
 const encodeSubject = (value) => `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
 
 const runProcess = (command, args, input = "", env = {}) => new Promise((resolvePromise, reject) => {
@@ -77,8 +77,16 @@ const sendViaSendmail = (message) => {
   return runProcess(bin, ["-i", "-t"], raw);
 };
 
+const phpBins = [
+  "/usr/local/bin/php",
+  "/usr/bin/php",
+  "/opt/cpanel/ea-php82/root/usr/bin/php",
+  "/opt/cpanel/ea-php81/root/usr/bin/php",
+  "/opt/cpanel/ea-php80/root/usr/bin/php",
+  "/opt/cpanel/ea-php83/root/usr/bin/php"
+];
 const sendViaPhp = (message) => {
-  const php = ["/usr/local/bin/php", "/usr/bin/php"].find((bin) => existsSync(bin));
+  const php = phpBins.find((bin) => existsSync(bin));
   if (!php) return Promise.reject(new Error("php not found"));
   const code = "mail(getenv('MAIL_TO'),getenv('MAIL_SUBJECT'),file_get_contents('php://stdin'),'From: '.getenv('MAIL_FROM').\"\\r\\nReply-To: \".getenv('MAIL_REPLY').\"\\r\\nContent-Type: text/plain; charset=UTF-8\")||exit(1);";
   return runProcess(php, ["-r", code], message.text, {
@@ -252,18 +260,18 @@ app.post("/api/logout", (request, response) => {
   response.json({ authenticated: false });
 });
 
-app.post("/api/contact", async (request, response, next) => {
-  try {
-    const origin = request.headers.origin;
-    if (origin) {
-      try {
-        if (new URL(origin).host !== request.headers.host) {
-          return response.status(403).json({ error: "Origin rejected" });
-        }
-      } catch {
-        return response.status(403).json({ error: "Origin rejected" });
-      }
+app.post("/api/contact", async (request, response) => {
+  const logMail = async (line) => {
+    try {
+      await mkdir(join(root, "tmp"), { recursive: true });
+      await appendFile(mailLog, `${new Date().toISOString()} ${line}\n`);
+    } catch (error) {
+      console.error("mail log write failed", error);
     }
+  };
+
+  try {
+    await logMail(`POST /api/contact origin=${request.headers.origin || "-"} host=${request.headers.host || "-"}`);
 
     const key = request.ip;
     const attempt = contactAttempts.get(key) || { count: 0, reset: Date.now() + 10 * 60 * 1000 };
@@ -303,12 +311,12 @@ app.post("/api/contact", async (request, response, next) => {
       subject,
       text: lines
     });
+    await logMail(`sent to ${contactTo}`);
     response.json({ sent: true });
   } catch (error) {
     console.error(error);
-    await mkdir(join(dataRoot, "tmp"), { recursive: true });
-    await appendFile(mailLog, `${new Date().toISOString()} ${error.stack || error}\n`).catch(() => {});
-    response.status(500).json({ error: "The message could not be sent." });
+    await logMail(error.stack || String(error));
+    response.status(500).json({ error: error.message || "The message could not be sent." });
   }
 });
 

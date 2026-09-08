@@ -410,8 +410,10 @@ function bind() {
       form.reset();
       note.textContent = t().formSent;
       note.classList.add("ok");
-    } catch {
-      note.textContent = t().formError;
+    } catch (error) {
+      note.textContent = error.message && error.message !== "send failed"
+        ? `${t().formError} ${error.message}`
+        : t().formError;
       note.classList.add("error");
     } finally {
       button.disabled = false;
