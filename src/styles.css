@@ -385,8 +385,20 @@ button { cursor: pointer; }
 .leader-card { border-bottom: 1px solid var(--line); padding-bottom: 36px; }
 .leader-card h2 { margin: 0 0 6px; font-size: 34px; }
 .leader-card .role { margin: 0 0 23px; color: var(--teal-dark); font: 500 12px/1.4 var(--display); letter-spacing: .14em; text-transform: uppercase; }
-.achievement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); }
-.achievement { min-height: 180px; padding: 27px; background: var(--surface); }
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.achievement {
+  min-height: 180px;
+  padding: 27px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
 .achievement .year { color: var(--teal-dark); font: 700 30px/1 var(--display); }
 .achievement h3 { margin: 14px 0 8px; font-size: 17px; }
 .achievement p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
