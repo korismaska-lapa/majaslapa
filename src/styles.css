@@ -16,11 +16,11 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: #1e2429; }
 body {
   margin: 0;
   color: var(--body);
-  background: #fff;
+  background: #1e2429;
   font-family: var(--text);
   -webkit-font-smoothing: antialiased;
 }

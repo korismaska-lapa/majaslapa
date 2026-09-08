@@ -467,12 +467,13 @@ function bind() {
 
 window.addEventListener("popstate", () => render());
 async function bootstrap() {
+  render();
   await loadContent();
   try {
     const response = await fetch("/api/session", { cache: "no-store" });
     if (response.ok) state.adminAuthenticated = Boolean((await response.json()).authenticated);
   } catch {}
   if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
-  render();
+  render(true);
 }
 bootstrap();
