@@ -170,7 +170,7 @@ function home() {
           <div class="programme-list">${site.programmes[state.lang].map(programmeCard).join("")}</div>
         </div>
       </section>
-      <section class="section"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
+      <section class="section home-music"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
         <div class="music-cards">
           <a class="music-card" href="${href("music")}#albums" data-route><span class="tag">Spotify</span><h3>${c.recordings}</h3><p>${c.recordingsNote}</p><span class="arrow">→</span></a>
           <a class="music-card" href="${href("music")}#video" data-route><span class="tag">YouTube</span><h3>${c.video}</h3><p>${c.videoNote}</p><span class="arrow">→</span></a>
