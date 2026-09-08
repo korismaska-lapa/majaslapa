@@ -163,8 +163,8 @@ function home() {
         <div class="home-about-copy"><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
         ${homeCarousel()}
       </section>
-      <section class="section surface">
-        <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link" href="${href("concerts")}" data-route>${c.allNews}</a></div>
+      <section class="section surface home-news">
+        <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link home-news-archive" href="${href("concerts")}" data-route>${c.allNews}</a></div>
         <div class="feature-grid">
           ${posts[0] ? `<a class="feature-card" href="${postHref(posts[0])}" data-route>${postImg(posts[0])}<div class="card-body"><span class="tag">${c.news} · ${formatDate(posts[0].date)}</span><h3>${escapeHtml(posts[0].title[state.lang] || posts[0].title.lv)}</h3><p>${escapeHtml(posts[0].excerpt[state.lang] || posts[0].excerpt.lv)}</p></div></a>` : ""}
           <div class="programme-list">${site.programmes[state.lang].map(programmeCard).join("")}</div>

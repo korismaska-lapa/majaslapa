@@ -827,7 +827,45 @@ button { cursor: pointer; }
       "copy"
       "carousel";
   }
-  .home-carousel { position: static; }
+  .home-carousel {
+    position: static;
+    margin-top: 36px;
+  }
+  .home-news {
+    display: flex;
+    flex-direction: column;
+  }
+  .home-news .section-head {
+    display: contents;
+  }
+  .home-news .section-head > div { margin-bottom: 34px; }
+  .home-news .feature-grid { order: 2; }
+  .home-news-archive {
+    order: 3;
+    align-self: start;
+    margin-top: 28px;
+  }
+  .voice-song summary {
+    min-width: 0;
+    gap: 12px;
+  }
+  .voice-song summary span { min-width: 0; flex: 1; }
+  .voice-song summary strong { overflow-wrap: anywhere; }
+  .voice-song summary em { flex-shrink: 0; }
+  .voice-library,
+  .voice-song,
+  .voice-recordings,
+  .voice-track { min-width: 0; }
+  .voice-track {
+    grid-template-columns: minmax(0, 1fr) 36px;
+  }
+  .voice-track > strong { grid-column: 1 / -1; }
+  .voice-track audio {
+    width: 1px;
+    min-width: 100%;
+    max-width: 100%;
+  }
+  .voice-track > a { justify-self: end; }
   .story-grid.flip > :first-child, .story-grid.flip > :last-child { order: 0; }
   .music-cards, .album-grid, .news-grid, .achievement-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: repeat(2, 1fr); }
@@ -853,7 +891,6 @@ button { cursor: pointer; }
   .button-row .button { width: 100%; }
   .voice-tools { grid-template-columns: 1fr; }
   .voice-song summary { align-items: start; }
-  .voice-track { grid-template-columns: 1fr 36px; }
-  .voice-track > strong { grid-column: 1 / -1; }
+  .voice-recordings { padding-left: 12px; padding-right: 12px; }
   .page-hero { min-height: 380px; }
 }
