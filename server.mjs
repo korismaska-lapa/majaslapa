@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
+import { createConnection } from "node:net";
 import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
@@ -55,7 +56,20 @@ const runProcess = (command, args, input = "", env = {}) => new Promise((resolve
   child.stdin.end(input);
 });
 
-const sendViaSendmail = (message) => {
+const addressOf = (value) => {
+  const match = String(value).match(/<([^>]+)>/);
+  return (match ? match[1] : String(value)).trim();
+};
+
+const whichCommand = (name) => new Promise((resolvePromise) => {
+  const child = spawn("bash", ["-lc", `command -v ${name}`]);
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk; });
+  child.on("error", () => resolvePromise(""));
+  child.on("close", () => resolvePromise(output.trim()));
+});
+
+const sendViaSendmail = async (message) => {
   const raw = [
     `From: ${message.from}`,
     `To: ${message.to}`,
@@ -71,40 +85,99 @@ const sendViaSendmail = (message) => {
     process.env.SENDMAIL_PATH,
     "/usr/sbin/sendmail",
     "/usr/lib/sendmail",
-    "/usr/bin/sendmail"
+    "/usr/bin/sendmail",
+    await whichCommand("sendmail")
   ].find((path) => path && existsSync(path));
-  if (!bin) return Promise.reject(new Error("sendmail not found"));
+  if (!bin) throw new Error("sendmail not found");
   return runProcess(bin, ["-i", "-t"], raw);
 };
+
+const sendViaSmtp = (message) => new Promise((resolvePromise, reject) => {
+  const socket = createConnection({ host: "127.0.0.1", port: 25 });
+  const commands = [
+    "HELO maska.local",
+    `MAIL FROM:<${addressOf(message.from)}>`,
+    `RCPT TO:<${addressOf(message.to)}>`,
+    "DATA",
+    null,
+    "QUIT"
+  ];
+  const payload = [
+    `From: ${message.from}`,
+    `To: ${message.to}`,
+    `Reply-To: ${message.replyTo}`,
+    `Subject: ${encodeSubject(message.subject)}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=UTF-8",
+    "",
+    message.text.replace(/^\./gm, ".."),
+    "."
+  ].join("\r\n");
+  let index = 0;
+  let buffer = "";
+  const timer = setTimeout(() => {
+    socket.destroy();
+    reject(new Error("smtp timeout"));
+  }, 15000);
+  socket.setEncoding("utf8");
+  socket.on("error", (error) => {
+    clearTimeout(timer);
+    reject(error);
+  });
+  socket.on("data", (chunk) => {
+    buffer += chunk;
+    const parts = buffer.split(/\r?\n/);
+    buffer = parts.pop() || "";
+    for (const line of parts) {
+      if (!/^\d{3}[ -]/.test(line) || line[3] === "-") continue;
+      const code = Number(line.slice(0, 3));
+      if (code >= 400) {
+        clearTimeout(timer);
+        socket.end();
+        reject(new Error(line));
+        return;
+      }
+      const next = commands[index];
+      index += 1;
+      if (next === undefined) {
+        clearTimeout(timer);
+        socket.end();
+        resolvePromise();
+        return;
+      }
+      socket.write(`${next === null ? payload : next}\r\n`);
+    }
+  });
+});
 
 const phpBins = [
   "/usr/local/bin/php",
   "/usr/bin/php",
+  "/opt/cpanel/ea-php83/root/usr/bin/php",
   "/opt/cpanel/ea-php82/root/usr/bin/php",
   "/opt/cpanel/ea-php81/root/usr/bin/php",
-  "/opt/cpanel/ea-php80/root/usr/bin/php",
-  "/opt/cpanel/ea-php83/root/usr/bin/php"
+  "/opt/cpanel/ea-php80/root/usr/bin/php"
 ];
-const sendViaPhp = (message) => {
-  const php = phpBins.find((bin) => existsSync(bin));
-  if (!php) return Promise.reject(new Error("php not found"));
-  const code = "mail(getenv('MAIL_TO'),getenv('MAIL_SUBJECT'),file_get_contents('php://stdin'),'From: '.getenv('MAIL_FROM').\"\\r\\nReply-To: \".getenv('MAIL_REPLY').\"\\r\\nContent-Type: text/plain; charset=UTF-8\")||exit(1);";
-  return runProcess(php, ["-r", code], message.text, {
-    MAIL_TO: message.to,
-    MAIL_SUBJECT: message.subject,
-    MAIL_FROM: message.from,
-    MAIL_REPLY: message.replyTo
-  });
+const sendViaPhp = async (message) => {
+  const php = phpBins.find((bin) => existsSync(bin)) || await whichCommand("php");
+  if (!php || !existsSync(php)) throw new Error("php not found");
+  const script = join(root, "scripts", "send-mail.php");
+  if (!existsSync(script)) throw new Error("send-mail.php missing");
+  return runProcess(php, [script, message.to, message.subject, message.from, message.replyTo], message.text);
 };
 
 const sendContactMail = async (message) => {
   const errors = [];
-  for (const send of [sendViaSendmail, sendViaPhp]) {
-    try {
-      await send(message);
-      return;
-    } catch (error) {
-      errors.push(error.message);
+  const fromAddresses = [message.from, "Koris MASKA <korismas@localhost>"];
+  for (const from of fromAddresses) {
+    const payload = { ...message, from };
+    for (const send of [sendViaSendmail, sendViaSmtp, sendViaPhp]) {
+      try {
+        await send(payload);
+        return;
+      } catch (error) {
+        errors.push(`${send.name}:${error.message}`);
+      }
     }
   }
   throw new Error(errors.join(" | "));
