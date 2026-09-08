@@ -42,6 +42,72 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const clip = (value, max) => String(value || "").trim().slice(0, max);
 const mailLog = join(root, "tmp", "mail-error.log");
 const encodeSubject = (value) => `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
+const escapeHtml = (value) => String(value)
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;");
+
+const formatContactEmail = ({ kind, name, email, phone, voice, subject, message }) => {
+  const fields = [
+    ["Vārds", name],
+    ["E-pasts", email]
+  ];
+  if (kind === "join" || phone) fields.push(["Tālrunis", phone || "—"]);
+  if (kind === "join" || voice) fields.push(["Balss grupa", voice || "—"]);
+  if (kind === "contact") fields.push(["Tēma", subject]);
+  const kicker = kind === "join" ? "Pieteikums korim" : "Raksti mums";
+  const heading = kind === "join" ? "Jauns pieteikums korim" : "Jauna ziņa no mājaslapas";
+  const messageLabel = kind === "join" ? "Ziņa" : "Jautājums";
+  const rule = "────────────────────────────────";
+  const text = [
+    "KORIS MASKA",
+    heading,
+    rule,
+    ...fields.map(([label, value]) => `${`${label}:`.padEnd(14)}${value}`),
+    "",
+    messageLabel,
+    rule,
+    message
+  ].join("\n");
+  const rows = fields.map(([label, value]) => {
+    let display = escapeHtml(value);
+    if (label === "E-pasts" && value !== "—") {
+      display = `<a href="mailto:${escapeHtml(value)}" style="color:#1e2429;text-decoration:none;border-bottom:1px solid #5bc2ce">${escapeHtml(value)}</a>`;
+    } else if (label === "Tālrunis" && value && value !== "—") {
+      const tel = value.replace(/[^\d+]/g, "");
+      display = `<a href="tel:${escapeHtml(tel)}" style="color:#1e2429;text-decoration:none;border-bottom:1px solid #5bc2ce">${escapeHtml(value)}</a>`;
+    }
+    return `<tr>
+      <td style="padding:11px 0 10px;border-bottom:1px solid #e6eaed;width:34%;vertical-align:top;font:600 11px/1.3 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#3aa3af">${escapeHtml(label)}</td>
+      <td style="padding:11px 0 10px;border-bottom:1px solid #e6eaed;font:600 16px/1.45 Arial,sans-serif;color:#1e2429">${display}</td>
+    </tr>`;
+  }).join("");
+  const html = `<!doctype html>
+<html lang="lv"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#eef2f4;font-family:Arial,sans-serif;color:#1e2429">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #d7dee2">
+    <tr>
+      <td style="padding:22px 28px 18px;background:#1e2429;color:#fff">
+        <div style="font:600 11px/1.3 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#5bc2ce">${escapeHtml(kicker)}</div>
+        <div style="margin-top:8px;font:700 22px/1.25 Arial,sans-serif">${escapeHtml(heading)}</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 28px 6px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:18px 28px 28px">
+        <div style="font:600 11px/1.3 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#3aa3af;margin-bottom:10px">${escapeHtml(messageLabel)}</div>
+        <div style="padding:16px 18px;background:#f4f8f9;border-left:3px solid #5bc2ce;font:16px/1.55 Arial,sans-serif;white-space:pre-wrap">${escapeHtml(message).replaceAll("\n", "<br>")}</div>
+      </td>
+    </tr>
+  </table>
+</body></html>`;
+  return { text, html };
+};
 
 const runProcess = (command, args, input = "", env = {}) => new Promise((resolvePromise, reject) => {
   const child = spawn(command, args, {
@@ -71,15 +137,26 @@ const whichCommand = (name) => new Promise((resolvePromise) => {
 });
 
 const sendViaSendmail = async (message) => {
+  const boundary = `maska_${crypto.randomBytes(8).toString("hex")}`;
   const raw = [
     `From: ${message.from}`,
     `To: ${message.to}`,
     `Reply-To: ${message.replyTo}`,
     `Subject: ${encodeSubject(message.subject)}`,
     "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
     "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
     "",
     message.text,
+    `--${boundary}`,
+    "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    message.html || message.text,
+    `--${boundary}--`,
     ""
   ].join("\n");
   const bin = [
@@ -296,23 +373,15 @@ const handleContact = async (request, response) => {
       return response.status(400).json({ error: "Please complete all required fields." });
     }
 
-    const lines = [
-      kind === "join" ? "Jauns pieteikums korim no mājaslapas." : "Jauna ziņa no mājaslapas formas «Raksti mums».",
-      "",
-      `Vārds: ${name}`,
-      `E-pasts: ${email}`,
-      kind === "join" || phone ? `Tālrunis: ${phone || "—"}` : "",
-      kind === "join" || voice ? `Balss grupa: ${voice || "—"}` : "",
-      "",
-      message
-    ].filter(Boolean).join("\n");
+    const mail = formatContactEmail({ kind, name, email, phone, voice, subject, message });
 
     await sendContactMail({
       from: mailFrom,
       to: contactTo,
       replyTo: `"${name.replace(/["\r\n]/g, "")}" <${email}>`,
       subject,
-      text: lines
+      text: mail.text,
+      html: mail.html
     });
     await logMail(`sent to ${contactTo}`);
     response.json({ sent: true });
