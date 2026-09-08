@@ -217,12 +217,29 @@ button { cursor: pointer; }
 .home-about {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr);
+  grid-template-areas:
+    "head ."
+    "copy carousel";
   gap: clamp(32px, 5vw, 72px);
+  column-gap: clamp(32px, 5vw, 72px);
+  row-gap: 0;
   align-items: start;
 }
-.home-about:not(:has(.home-carousel)) { grid-template-columns: 1fr; }
-.home-about-copy { min-width: 0; }
+.home-about:not(:has(.home-carousel)) {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "head"
+    "copy";
+}
+.home-about-head { grid-area: head; }
+.home-about-copy { grid-area: copy; min-width: 0; }
 .home-about-copy .prose { max-width: none; }
+.home-carousel {
+  grid-area: carousel;
+  position: sticky;
+  top: 88px;
+  min-width: 0;
+}
 .home-about-copy .prose p:last-child { margin-bottom: 0; }
 .home-about-copy .text-link { margin-top: 8px; }
 .prose-lead { margin: 0 0 18px; color: var(--ink); font-size: 18px; font-weight: 600; line-height: 1.65; }
@@ -249,11 +266,6 @@ button { cursor: pointer; }
   white-space: nowrap;
 }
 
-.home-carousel {
-  position: sticky;
-  top: 88px;
-  min-width: 0;
-}
 .home-carousel-viewport {
   position: relative;
   width: 100%;
@@ -803,6 +815,12 @@ button { cursor: pointer; }
   .main-nav a { padding: 11px 0; font-size: 18px; }
   .lang-switch { align-self: start; }
   .home-about, .feature-grid, .story-grid { grid-template-columns: 1fr; }
+  .home-about {
+    grid-template-areas:
+      "head"
+      "copy"
+      "carousel";
+  }
   .home-carousel { position: static; }
   .story-grid.flip > :first-child, .story-grid.flip > :last-child { order: 0; }
   .music-cards, .album-grid, .news-grid, .achievement-grid { grid-template-columns: repeat(2, 1fr); }

@@ -159,7 +159,8 @@ function home() {
         </div>
       </section>
       <section class="section home-about">
-        <div class="home-about-copy"><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
+        <div class="home-about-head"><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div></div>
+        <div class="home-about-copy"><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
         ${homeCarousel()}
       </section>
       <section class="section surface">
