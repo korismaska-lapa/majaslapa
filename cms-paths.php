@@ -36,6 +36,14 @@ function maska_content_dir($root) {
           }
         }
       }
+      if (($site["copy"]["lv"]["concertsNews"] ?? "") === "Koncerti un jaunumi") {
+        $site["copy"]["lv"]["concertsNews"] = "Jaunumi un koncerti";
+        $copyChanged = true;
+      }
+      if (($site["copy"]["en"]["concertsNews"] ?? "") === "Concerts and news") {
+        $site["copy"]["en"]["concertsNews"] = "News and concerts";
+        $copyChanged = true;
+      }
       if ($copyChanged) {
         @file_put_contents($live . "/site.json", json_encode($site, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n");
       }

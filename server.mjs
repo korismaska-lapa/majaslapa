@@ -55,6 +55,14 @@ if (existsSync(siteFile)) {
   };
   if (renameNav(liveSite.copy?.lv?.nav, "concerts", "Koncerti", "Jaunumi & Koncerti")) copyChanged = true;
   if (renameNav(liveSite.copy?.en?.nav, "concerts", "Concerts", "News & Concerts")) copyChanged = true;
+  if (liveSite.copy?.lv?.concertsNews === "Koncerti un jaunumi") {
+    liveSite.copy.lv.concertsNews = "Jaunumi un koncerti";
+    copyChanged = true;
+  }
+  if (liveSite.copy?.en?.concertsNews === "Concerts and news") {
+    liveSite.copy.en.concertsNews = "News and concerts";
+    copyChanged = true;
+  }
   if (copyChanged) await writeFile(siteFile, `${JSON.stringify(liveSite, null, 2)}\n`);
 }
 const postsDirectory = join(liveContent, "posts");
