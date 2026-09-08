@@ -53,8 +53,10 @@ if (existsSync(siteFile)) {
     item[0] = to;
     return true;
   };
-  if (renameNav(liveSite.copy?.lv?.nav, "concerts", "Koncerti", "Jaunumi & Koncerti")) copyChanged = true;
-  if (renameNav(liveSite.copy?.en?.nav, "concerts", "Concerts", "News & Concerts")) copyChanged = true;
+  if (renameNav(liveSite.copy?.lv?.nav, "concerts", "Koncerti", "Jaunumi un Koncerti")) copyChanged = true;
+  if (renameNav(liveSite.copy?.lv?.nav, "concerts", "Jaunumi & Koncerti", "Jaunumi un Koncerti")) copyChanged = true;
+  if (renameNav(liveSite.copy?.en?.nav, "concerts", "Concerts", "News and Concerts")) copyChanged = true;
+  if (renameNav(liveSite.copy?.en?.nav, "concerts", "News & Concerts", "News and Concerts")) copyChanged = true;
   if (liveSite.copy?.lv?.concertsNews === "Koncerti un jaunumi") {
     liveSite.copy.lv.concertsNews = "Jaunumi un koncerti";
     copyChanged = true;

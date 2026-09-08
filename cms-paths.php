@@ -23,7 +23,12 @@ function maska_content_dir($root) {
         $site["copy"]["en"]["listen"] = "Our music";
         $copyChanged = true;
       }
-      foreach (array(array("lv", "Koncerti", "Jaunumi & Koncerti"), array("en", "Concerts", "News & Concerts")) as $pair) {
+      foreach (array(
+        array("lv", "Koncerti", "Jaunumi un Koncerti"),
+        array("lv", "Jaunumi & Koncerti", "Jaunumi un Koncerti"),
+        array("en", "Concerts", "News and Concerts"),
+        array("en", "News & Concerts", "News and Concerts"),
+      ) as $pair) {
         $lang = $pair[0];
         $from = $pair[1];
         $to = $pair[2];
