@@ -34,12 +34,14 @@ const postHref = (post) => href(`news/${encodeURIComponent(post.slug)}`);
 const t = () => copy[state.lang];
 const escapeHtml = (value = "") => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const FALLBACK_POST_IMAGE = "/media/maska-logo.png";
-const postImage = (post) => String(post?.image || "").trim() || FALLBACK_POST_IMAGE;
-const postImg = (post) => {
-  const src = postImage(post);
-  const fallbackClass = src === FALLBACK_POST_IMAGE ? " logo-fallback" : "";
-  return `<img src="${escapeHtml(src)}" alt="" loading="lazy" class="${fallbackClass.trim()}" onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}';this.classList.add('logo-fallback')">`;
+const mediaSrc = (src) => String(src || "").trim() || FALLBACK_POST_IMAGE;
+const mediaImg = (src, alt = "", className = "") => {
+  const path = mediaSrc(src);
+  const fallback = path === FALLBACK_POST_IMAGE ? " logo-fallback" : "";
+  return `<img src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="lazy" class="${escapeHtml(`${className}${fallback}`.trim())}" onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}';this.classList.add('logo-fallback')">`;
 };
+const postImage = (post) => mediaSrc(post?.image);
+const postImg = (post) => mediaImg(postImage(post));
 const youtubeUrlRe = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})[^\s]*/gi;
 const youtubeEmbed = (id) => `<div class="article-embed video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
 function renderArticleParagraph(paragraph, index) {
@@ -89,7 +91,7 @@ function footer() {
 }
 
 const pageHero = (eyebrow, title, lead, image, extraClass = "") => `
-  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}" style="--hero-image:url('${image}')">
+  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}" style="--hero-image:url(${JSON.stringify(mediaSrc(image))})">
     <div class="page-hero-inner"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lead ? `<p>${lead}</p>` : ""}</div>
   </section>`;
 
@@ -154,7 +156,7 @@ function personCard(person, index) {
   const text = person.text?.[state.lang] || person.text?.lv || "";
   const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
   return `<section class="section story-grid ${index % 2 === 1 ? "flip" : ""}">
-    <div><img class="portrait" src="${escapeHtml(person.photo || FALLBACK_POST_IMAGE)}" alt="${escapeHtml(person.name)}" loading="lazy"></div>
+    <div>${mediaImg(person.photo, person.name, "portrait")}</div>
     <div class="leader-card">
       ${occupation ? `<p class="eyebrow">${escapeHtml(occupation)}</p>` : ""}
       <h2>${escapeHtml(person.name)}</h2>
@@ -259,7 +261,7 @@ function music() {
   const videos = site.videos;
   return `<main id="main">
     ${pageHero(c.musicTitle, c.recordings, c.musicPageLead, site.media.musicHero)}
-    <section class="section" id="albums"><h2 class="section-title">${c.albumsTitle}</h2><div class="rule"></div><div class="album-grid">${albums.map((album) => `<article class="album"><img src="${album.image}" alt="${escapeHtml(album.title)}" loading="lazy"><div class="album-content"><span class="tag">${escapeHtml(album.year)}</span><h2>${escapeHtml(album.title)}</h2><p>${escapeHtml(album.description?.[state.lang] || album.description?.lv || c[album.descriptionKey] || "")}</p><a href="${album.url}" target="_blank" rel="noreferrer">${c.listenSpotify} →</a></div></article>`).join("")}</div></section>
+    <section class="section" id="albums"><h2 class="section-title">${c.albumsTitle}</h2><div class="rule"></div><div class="album-grid">${albums.map((album) => `<article class="album">${mediaImg(album.image, album.title)}<div class="album-content"><span class="tag">${escapeHtml(album.year)}</span><h2>${escapeHtml(album.title)}</h2><p>${escapeHtml(album.description?.[state.lang] || album.description?.lv || c[album.descriptionKey] || "")}</p><a href="${album.url}" target="_blank" rel="noreferrer">${c.listenSpotify} →</a></div></article>`).join("")}</div></section>
     <section class="section surface" id="video"><h2 class="section-title">${c.videoTitle}</h2><div class="rule"></div><div class="video-grid">${videos.map((video) => `<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="${escapeHtml(video.title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><h3>${escapeHtml(video.title)}</h3></article>`).join("")}</div></section>
     <section class="section" id="voices"><h2 class="section-title">${c.singersTitle}</h2><div class="rule"></div><p class="prose">${c.singerArchive}</p>${voiceArchive()}</section>
   </main>`;

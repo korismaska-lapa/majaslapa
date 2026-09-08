@@ -379,10 +379,13 @@ button { cursor: pointer; }
 .news-card[hidden] { display: none; }
 .news-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; }
 .news-card img.logo-fallback,
-.feature-card img.logo-fallback {
+.feature-card img.logo-fallback,
+.album img.logo-fallback,
+.portrait.logo-fallback {
   object-fit: contain;
   background: var(--deep);
   padding: 18%;
+  filter: none;
 }
 .news-card-body { padding: 21px 22px 24px; display: flex; flex: 1; flex-direction: column; }
 .date { color: var(--teal-dark); font: 500 11px/1.2 var(--display); letter-spacing: .13em; text-transform: uppercase; }

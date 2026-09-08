@@ -400,7 +400,10 @@ export function bindAdmin({ content, posts, refresh, navigate }) {
         const target = upload.dataset.uploadTarget
           ? document.querySelector(upload.dataset.uploadTarget)
           : document.querySelector("#post-image");
-        if (target) target.value = result.path;
+        if (target) {
+          target.value = result.path;
+          showStatus(upload.closest("form"), "Foto pievienots. Saglabā, lai tas parādītos lapā.");
+        }
       } catch (exception) {
         showStatus(upload.closest("form"), exception.message, true);
       }
