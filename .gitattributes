@@ -3,3 +3,4 @@ scripts/*.php text eol=lf
 send-mail.php text eol=lf
 admin-api.php text eol=lf
 content-api.php text eol=lf
+cms-paths.php text eol=lf

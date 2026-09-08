@@ -6,6 +6,7 @@ dist/
 media/
 public/media/voices/
 public/media/uploads/
+data/
 tmp/
 .htaccess
 *.log

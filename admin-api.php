@@ -3,8 +3,10 @@ header("Content-Type: application/json; charset=utf-8");
 header("Cache-Control: no-store");
 
 $root = __DIR__;
-$siteFile = $root . "/content/site.json";
-$postsDir = $root . "/content/posts";
+require_once $root . "/cms-paths.php";
+$contentDir = maska_content_dir($root);
+$siteFile = $contentDir . "/site.json";
+$postsDir = $contentDir . "/posts";
 $sessionDir = $root . "/tmp/admin-sess";
 $loginFile = $root . "/tmp/admin-login.json";
 $passwordEncoded = "VGFzdHVuZGFuYWshITExMQ==";

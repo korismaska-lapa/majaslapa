@@ -3,9 +3,11 @@ header("Content-Type: application/json; charset=utf-8");
 header("Cache-Control: no-store");
 
 $root = __DIR__;
-$siteFile = $root . "/content/site.json";
-$voicesFile = $root . "/content/voices.json";
-$postsDir = $root . "/content/posts";
+require_once $root . "/cms-paths.php";
+$contentDir = maska_content_dir($root);
+$siteFile = $contentDir . "/site.json";
+$voicesFile = $contentDir . "/voices.json";
+$postsDir = $contentDir . "/posts";
 
 $site = is_file($siteFile) ? json_decode(file_get_contents($siteFile), true) : null;
 $voices = is_file($voicesFile) ? json_decode(file_get_contents($voicesFile), true) : [];

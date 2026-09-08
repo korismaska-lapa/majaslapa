@@ -2,19 +2,37 @@ import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import multer from "multer";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const production = process.argv.includes("--production") || process.env.NODE_ENV === "production" || Boolean(process.env.PASSENGER_STARTED_AT || process.env.PASSENGER_APP_ENV);
-const dataRoot = resolve(process.env.DATA_DIR || root);
-const siteFile = join(dataRoot, "content", "site.json");
-const voicesFile = join(dataRoot, "content", "voices.json");
-const postsDirectory = join(dataRoot, "content", "posts");
-const uploadsDirectory = join(dataRoot, "media", "uploads");
-const publicUploadsDirectory = join(dataRoot, "public", "media", "uploads");
+const copyIfMissing = async (from, to) => {
+  if (existsSync(to)) return;
+  const { cp } = await import("node:fs/promises");
+  if (!existsSync(from)) return;
+  await mkdir(dirname(to), { recursive: true });
+  await cp(from, to, { recursive: true });
+};
+
+const seedContent = join(root, "content");
+const liveContent = join(root, "data", "content");
+await mkdir(join(liveContent, "posts"), { recursive: true });
+await copyIfMissing(join(seedContent, "site.json"), join(liveContent, "site.json"));
+await copyIfMissing(join(seedContent, "voices.json"), join(liveContent, "voices.json"));
+if (existsSync(join(seedContent, "posts"))) {
+  for (const file of (await readdir(join(seedContent, "posts"))).filter((name) => name.endsWith(".json"))) {
+    await copyIfMissing(join(seedContent, "posts", file), join(liveContent, "posts", file));
+  }
+}
+
+const siteFile = join(liveContent, "site.json");
+const voicesFile = join(liveContent, "voices.json");
+const postsDirectory = join(liveContent, "posts");
+const uploadsDirectory = join(root, "media", "uploads");
+const publicUploadsDirectory = join(root, "public", "media", "uploads");
 const port = Number(process.env.PORT) || 5173;
 const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 
@@ -32,17 +50,6 @@ const passwordMatches = (password) => {
   }
 };
 
-const copyIfMissing = async (from, to) => {
-  if (existsSync(to)) return;
-  const { cp } = await import("node:fs/promises");
-  if (!existsSync(from)) return;
-  await mkdir(dirname(to), { recursive: true });
-  await cp(from, to, { recursive: true });
-};
-
-if (dataRoot !== root) {
-  await copyIfMissing(join(root, "content"), join(dataRoot, "content"));
-}
 const sessions = new Map();
 const loginAttempts = new Map();
 const contactAttempts = new Map();
@@ -480,7 +487,6 @@ app.use((request, response, next) => {
 app.use("/media", express.static(join(root, "public", "media")));
 app.use("/media", express.static(join(root, "media")));
 app.use("/assets", express.static(join(root, "assets")));
-if (dataRoot !== root) app.use(express.static(join(dataRoot, "public")));
 app.use(express.static(join(root, "public")));
 
 if (!production) {

@@ -9,8 +9,56 @@ LOG="$DEPLOYPATH/tmp/deploy.log"
 exec >>"$LOG" 2>&1
 echo "=== $(date -Iseconds) deploy start ==="
 
+preserve_live_cms() {
+  local dest="$1"
+  mkdir -p "$dest/data/content/posts"
+  if [ ! -f "$dest/data/content/site.json" ] && [ -f "$dest/content/site.json" ]; then
+    echo "Saving live site.json into data/content so Git cannot overwrite it"
+    cp "$dest/content/site.json" "$dest/data/content/site.json"
+  fi
+  if [ ! -f "$dest/data/content/voices.json" ] && [ -f "$dest/content/voices.json" ]; then
+    cp "$dest/content/voices.json" "$dest/data/content/voices.json"
+  fi
+  if [ -d "$dest/content/posts" ]; then
+    for f in "$dest/content/posts"/*.json; do
+      [ -f "$f" ] || continue
+      base="$(basename "$f")"
+      if [ ! -f "$dest/data/content/posts/$base" ]; then
+        cp "$f" "$dest/data/content/posts/$base"
+      fi
+    done
+  fi
+  if [ -f "$dest/data/content/site.json" ]; then
+    echo "Live CMS kept at data/content/site.json"
+  fi
+}
+
+seed_missing_cms() {
+  local dest="$1"
+  local seed="$2"
+  mkdir -p "$dest/data/content/posts"
+  if [ ! -f "$dest/data/content/site.json" ] && [ -f "$seed/site.json" ]; then
+    echo "Seeding data/content/site.json from the repo"
+    cp "$seed/site.json" "$dest/data/content/site.json"
+  fi
+  if [ ! -f "$dest/data/content/voices.json" ] && [ -f "$seed/voices.json" ]; then
+    cp "$seed/voices.json" "$dest/data/content/voices.json"
+  fi
+  if [ -d "$seed/posts" ]; then
+    for f in "$seed/posts"/*.json; do
+      [ -f "$f" ] || continue
+      base="$(basename "$f")"
+      if [ ! -f "$dest/data/content/posts/$base" ]; then
+        cp "$f" "$dest/data/content/posts/$base"
+      fi
+    done
+  fi
+}
+
 SRC="$(pwd -P)"
 DST="$(cd "$DEPLOYPATH" && pwd -P)"
+
+preserve_live_cms "$DEPLOYPATH"
 
 if [ "$SRC" = "$DST" ]; then
   echo "Git clone is already the live folder; skipping file copy"
@@ -23,6 +71,8 @@ else
       --exclude '.git/' \
       --exclude 'node_modules/' \
       --exclude 'tmp/' \
+      --exclude 'data/' \
+      --exclude 'content/' \
       --exclude 'media/' \
       --exclude 'public/media/voices/' \
       --exclude 'public/media/uploads/' \
@@ -35,6 +85,8 @@ else
       --exclude='.git' \
       --exclude='node_modules' \
       --exclude='tmp' \
+      --exclude='data' \
+      --exclude='content' \
       --exclude='media' \
       --exclude='public/media/voices' \
       --exclude='public/media/uploads' \
@@ -44,12 +96,14 @@ else
   fi
 fi
 
+seed_missing_cms "$DEPLOYPATH" "$(pwd -P)/content"
+
 # tar of "." can leave the site folder as 700, which Apache/LiteSpeed serves as 403
 chmod 755 "$DEPLOYPATH"
-mkdir -p "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/tmp"
-chmod 755 "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" 2>/dev/null || true
+mkdir -p "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/tmp" "$DEPLOYPATH/data/content/posts"
+chmod 755 "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/data" "$DEPLOYPATH/data/content" "$DEPLOYPATH/data/content/posts" 2>/dev/null || true
 chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" \
-  "$DEPLOYPATH/send-mail.php" "$DEPLOYPATH/admin-api.php" "$DEPLOYPATH/content-api.php" 2>/dev/null || true
+  "$DEPLOYPATH/send-mail.php" "$DEPLOYPATH/admin-api.php" "$DEPLOYPATH/content-api.php" "$DEPLOYPATH/cms-paths.php" 2>/dev/null || true
 if [ -f "$DEPLOYPATH/.htaccess" ]; then
   chmod 644 "$DEPLOYPATH/.htaccess"
 fi
