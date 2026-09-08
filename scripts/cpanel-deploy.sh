@@ -9,32 +9,50 @@ LOG="$DEPLOYPATH/tmp/deploy.log"
 exec >>"$LOG" 2>&1
 echo "=== $(date -Iseconds) deploy start ==="
 
-echo "Copying files to $DEPLOYPATH"
-RSYNC="$(command -v rsync || true)"
-if [ -n "$RSYNC" ]; then
-  echo "Using $RSYNC"
-  "$RSYNC" -a \
-    --exclude '.git/' \
-    --exclude 'node_modules/' \
-    --exclude 'tmp/' \
-    --exclude 'media/' \
-    --exclude 'public/media/voices/' \
-    --exclude 'public/media/uploads/' \
-    --exclude '.htaccess' \
-    --exclude '.cpanel.yml' \
-    ./ "$DEPLOYPATH/"
+SRC="$(pwd -P)"
+DST="$(cd "$DEPLOYPATH" && pwd -P)"
+
+if [ "$SRC" = "$DST" ]; then
+  echo "Git clone is already the live folder; skipping file copy"
 else
-  echo "rsync not found, using tar"
-  /bin/tar -cf - \
-    --exclude='.git' \
-    --exclude='node_modules' \
-    --exclude='tmp' \
-    --exclude='media' \
-    --exclude='public/media/voices' \
-    --exclude='public/media/uploads' \
-    --exclude='.htaccess' \
-    --exclude='.cpanel.yml' \
-    . | /bin/tar -xf - -C "$DEPLOYPATH"
+  echo "Copying files to $DEPLOYPATH"
+  RSYNC="$(command -v rsync || true)"
+  if [ -n "$RSYNC" ]; then
+    echo "Using $RSYNC"
+    "$RSYNC" -a \
+      --exclude '.git/' \
+      --exclude 'node_modules/' \
+      --exclude 'tmp/' \
+      --exclude 'media/' \
+      --exclude 'public/media/voices/' \
+      --exclude 'public/media/uploads/' \
+      --exclude '.htaccess' \
+      --exclude '.cpanel.yml' \
+      ./ "$DEPLOYPATH/"
+  else
+    echo "rsync not found, using tar"
+    /bin/tar -cf - \
+      --exclude='.git' \
+      --exclude='node_modules' \
+      --exclude='tmp' \
+      --exclude='media' \
+      --exclude='public/media/voices' \
+      --exclude='public/media/uploads' \
+      --exclude='.htaccess' \
+      --exclude='.cpanel.yml' \
+      . | /bin/tar --no-same-permissions --no-same-owner -xf - -C "$DEPLOYPATH"
+  fi
+fi
+
+# tar of "." can leave the site folder as 700, which Apache/LiteSpeed serves as 403
+chmod 755 "$DEPLOYPATH"
+chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" 2>/dev/null || true
+if [ -f "$DEPLOYPATH/.htaccess" ]; then
+  chmod 644 "$DEPLOYPATH/.htaccess"
+fi
+if [ -d "$DEPLOYPATH/assets" ]; then
+  find "$DEPLOYPATH/assets" -type d -exec chmod 755 {} +
+  find "$DEPLOYPATH/assets" -type f -exec chmod 644 {} \;
 fi
 
 NPM=""
@@ -66,10 +84,16 @@ if [ -n "$NPM" ]; then
   PATH="$(dirname "$NPM"):$PATH"
   export PATH
   $NPM install --omit=dev --no-audit --no-fund --no-progress
+  if [ -f "$DEPLOYPATH/.htaccess" ]; then
+    echo "Pointing Passenger at $NODE"
+    sed -i "s|^PassengerNodejs \".*\"|PassengerNodejs \"$NODE\"|" "$DEPLOYPATH/.htaccess"
+  fi
 else
   echo "ERROR: Node 16+ was not found. In cPanel open Setup Node.js App and switch this app from Node 10 to Node 20, then deploy again."
   exit 1
 fi
 
 /bin/touch "$DEPLOYPATH/tmp/restart.txt"
+echo "Permissions: $(ls -ld "$DEPLOYPATH")"
+echo "Passenger: $(grep PassengerNodejs "$DEPLOYPATH/.htaccess" 2>/dev/null || true)"
 echo "=== $(date -Iseconds) deploy ok ==="
