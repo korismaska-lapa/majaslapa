@@ -115,6 +115,10 @@ EOF
 </FilesMatch>
 EOF
   fi
+  if grep -q "SetEnv ADMIN_PASSWORD" "$HTACCESS"; then
+    echo "Clearing plaintext ADMIN_PASSWORD from .htaccess"
+    sed -i "s/^[[:space:]]*SetEnv ADMIN_PASSWORD .*/# ADMIN_PASSWORD is hashed in server.mjs/" "$HTACCESS"
+  fi
 fi
 
 {

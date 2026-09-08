@@ -17,9 +17,17 @@ const uploadsDirectory = join(dataRoot, "public", "media", "uploads");
 const port = Number(process.env.PORT) || 5173;
 const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 
-if (production && !process.env.ADMIN_PASSWORD) {
-  console.warn("ADMIN_PASSWORD is unset; using the local default (123). Set ADMIN_PASSWORD for a stronger password.");
-}
+const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
+  || "scrypt:wzHRC3pAj6v6GykkIPoK8g==:r9xVORSiOZ8sVbR3tn22MtXE90d0GDMJbpxNC5LhkWfahP6IIp6m03rVtAbfVr0Je0OCtT4NkYsGM98yC6IS0w==";
+const passwordMatches = (password) => {
+  const parts = String(adminPasswordHash).split(":");
+  if (parts[0] !== "scrypt" || parts.length !== 3) return false;
+  const salt = Buffer.from(parts[1], "base64");
+  const expected = Buffer.from(parts[2], "base64");
+  if (!salt.length || expected.length !== 64) return false;
+  const actual = crypto.scryptSync(String(password || ""), salt, expected.length, { N: 16384, r: 8, p: 1 });
+  return crypto.timingSafeEqual(actual, expected);
+};
 
 const copyIfMissing = async (from, to) => {
   if (existsSync(to)) return;
@@ -238,12 +246,6 @@ const requireAdmin = (request, response, next) => {
   next();
 };
 
-const safeEqual = (left, right) => {
-  const a = Buffer.from(String(left));
-  const b = Buffer.from(String(right));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-};
-
 const sessionCookie = (request, token) => {
   const proto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim();
   const https = request.secure || proto === "https";
@@ -324,7 +326,7 @@ app.post("/api/login", (request, response) => {
   loginAttempts.set(key, attempt);
   if (attempt.count > 10) return response.status(429).json({ error: "Too many attempts. Try again later." });
 
-  if (!safeEqual(request.body?.password || "", process.env.ADMIN_PASSWORD || "123")) {
+  if (!passwordMatches(request.body?.password)) {
     return response.status(401).json({ error: "Incorrect password" });
   }
   loginAttempts.delete(key);
@@ -503,6 +505,5 @@ if (typeof globalThis.PhusionPassenger !== "undefined") {
   app.listen(port, host, () => {
     console.log(`MASKA site running at http://127.0.0.1:${port}`);
     if (host === "0.0.0.0") console.log(`Other devices on the same network: http://<this-PC-IPv4>:${port}`);
-    if (!process.env.ADMIN_PASSWORD) console.log("Admin /login uses the local default password.");
   });
 }
