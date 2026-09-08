@@ -1,0 +1,454 @@
+{
+  "copy": {
+    "lv": {
+      "nav": [
+        [
+          "Par kori",
+          "about"
+        ],
+        [
+          "Koncerti",
+          "concerts"
+        ],
+        [
+          "Mūzika",
+          "music"
+        ],
+        [
+          "Pievienojies",
+          "join"
+        ],
+        [
+          "Kontakti",
+          "contact"
+        ]
+      ],
+      "heroEyebrow": "Mārupes novada Babītes Kultūrizglītības centrs",
+      "heroTitle": "Jauktais koris MASKA",
+      "heroLead": "Dibināts 2000. gadā. Diriģents un mākslinieciskais vadītājs Jānis Ozols. Kormūzika, kurā klasika sadzīvo ar rokmūziku, tautasdziesmu un jaundarbiem.",
+      "listen": "Klausies kori",
+      "join": "Pievienojies korim",
+      "aboutTitle": "Par kori",
+      "aboutLead": "Babītes novada jauktais koris “MASKA” ir viens no labākajiem Latvijas amatieru koriem.",
+      "about1": "Koris dibināts 2000. gadā, un tā izveidotājs, diriģents un mākslinieciskais vadītājs no kora pastāvēšanas pirmās dienas ir Jānis Ozols. Koris “MASKA” un diriģents Jānis Ozols ir radoša apvienība ar savu šarmu un stilu, kur unikalitāti raksturo spēja izpildīt ne tikai klasisku kormūziku, bet arī uzdrīkstēšanās būt atšķirīgiem.",
+      "about2": "Kora repertuārs aptver plašu mūzikas žanru loku — no garīgās līdz tautas mūzikai, no klasiskās līdz mūsdienu mūzikai, vienmēr meklējot jaunas interpretāciju iespējas.",
+      "about3": "Koris sadarbojas ar Latvijā un pasaulē atzītiem mūziķiem — Rihardu Zaļupi, Renāti Stivriņu, Jāni Šipkēvicu, Vestardu Šimku un daudziem citiem.",
+      "aboutMore": "Diriģents, vēsture un sasniegumi",
+      "founded": "Dibināšanas gads",
+      "albums": "Mūzikas albumi",
+      "years": "Gadi kopā",
+      "concertsNews": "Koncerti un jaunumi",
+      "allNews": "Viss jaunumu arhīvs",
+      "news": "Jaunumi",
+      "latestTitle": "MASKAS balsis izskan “Béla Bartók International Choir Competition 2026” Ungārijā",
+      "latestBody": "Jūlija sākumā koris MASKA pārstāvēja Latviju prestižajā starptautiskajā kormūzikas konkursā Ungārijā.",
+      "programs": "Koncertprogrammas",
+      "musicTitle": "Klausies un skaties",
+      "musicLead": "Albumi, video un balsu partijas vienuviet — gan klausītājiem, gan koristiem.",
+      "recordings": "Ieraksti",
+      "recordingsNote": "Trīs albumi un atsevišķi skaņdarbi.",
+      "video": "Video",
+      "videoNote": "Koncertu ieraksti un videoklipi.",
+      "voices": "Balsu partijas",
+      "voicesNote": "Ierakstu arhīvs repertuāra apguvei.",
+      "joinEyebrow": "Uzņemam jaunus dziedātājus",
+      "joinTitle": "Tava balss var būt MASKĀ",
+      "joinLead": "Ja dziedāšana ir tava lieta un vēlies to darīt kopā ar kolektīvu, kas uzdrīkstas būt atšķirīgs — nāc uz mēģinājumu un parunā ar diriģentu.",
+      "apply": "Piesakies dziedāt",
+      "rehearsals": "Mēģinājumi",
+      "venue": "Vieta",
+      "gettingThere": "Nokļūšana",
+      "president": "Kora prezidente",
+      "rehearsalValue": "Pirmdien un trešdien 18:15–21:15",
+      "venueValue": "Babītes vidusskola, Jūrmalas iela 17, Piņķi",
+      "travelValue": "4. un 32. autobuss (pietura “Piņķi”), bezmaksas stāvvieta",
+      "contactEyebrow": "Sazinies ar mums",
+      "footerBlurb": "Mārupes novada Babītes Kultūrizglītības centra jauktais koris. Diriģents Jānis Ozols.",
+      "pages": "Lapas",
+      "contact": "Kontakti",
+      "follow": "Sekot",
+      "archive": "Arhīvs",
+      "aboutPageLead": "Radoša apvienība ar savu šarmu un stilu — no klasiskas kormūzikas līdz drosmīgiem jaunrades projektiem.",
+      "choir": "Koris",
+      "conductor": "Diriģents",
+      "achievements": "Sasniegumi",
+      "collaboration": "Sadarbība",
+      "conductorRole": "Diriģents un mākslinieciskais vadītājs",
+      "conductorText1": "Jānis Ozols ir kora MASKA izveidotājs, diriģents un mākslinieciskais vadītājs kopš tā dibināšanas 2000. gadā. Viņa vadībā koris izaudzis par vienu no spilgtākajiem Latvijas amatieru koriem.",
+      "conductorText2": "Jānis Ozols absolvējis Jāzepa Vītola Latvijas Mūzikas akadēmiju un par savu darbu saņēmis vairākas labākā diriģenta balvas starptautiskos konkursos.",
+      "concertsLead": "Kora jaunākie notikumi, koncertprogrammas un vairāk nekā piecpadsmit gadu jaunumu arhīvs.",
+      "allYears": "Visi gadi",
+      "loadMore": "Rādīt vēl",
+      "albumsTitle": "Albumi un ieraksti",
+      "videoTitle": "Video izlase",
+      "singersTitle": "Balsu partijas koristiem",
+      "musicPageLead": "Kora albumi, koncertu video un plašais repertuāra apguves arhīvs no WordPress mediju bibliotēkas.",
+      "albumDedication": "Kora trešais albums ar latviešu komponistu darbiem.",
+      "albumZiema": "Lauras Jēkabsones Ziemassvētku kompozīciju albums.",
+      "albumGospels": "Riharda Zaļupes “7 Stories of the Gospel of Thomas”.",
+      "listenSpotify": "Klausīties Spotify",
+      "singerArchive": "384 repertuāra ieraksti no kora arhīva — sakārtoti pa skaņdarbiem un balsu grupām. Izvēlies skaņdarbu, lai klausītos vai lejupielādētu savu partiju.",
+      "joinPageLead": "MASKA uzņem jaunus dziedātājus. Atsūti īsu pieteikumu, un mēs sazināsimies par nākamo mēģinājumu.",
+      "whatToExpect": "Ko sagaidīt",
+      "expectation1": "Divi mēģinājumi nedēļā Babītes vidusskolā.",
+      "expectation2": "Daudzveidīgs repertuārs, koncerti Latvijā un ārvalstīs.",
+      "expectation3": "Mērķtiecīgs darbs draudzīgā un radošā kolektīvā.",
+      "formTitle": "Pieteikums korim",
+      "name": "Vārds un uzvārds",
+      "email": "E-pasts",
+      "phone": "Tālrunis",
+      "voice": "Balss grupa (ja zināma)",
+      "message": "Īsi par savu muzikālo pieredzi",
+      "send": "Sagatavot e-pastu",
+      "privacy": "Nospiežot pogu, tiks atvērta tava e-pasta programma. Vietne pieteikuma datus neuzglabā.",
+      "contactPageLead": "Jautājumiem par koncertiem, sadarbību, pievienošanos korim un preses materiāliem.",
+      "general": "Vispārīgi jautājumi",
+      "social": "Sociālie tīkli",
+      "location": "Mēģinājumu vieta",
+      "openMap": "Atvērt Google Maps",
+      "writeUs": "Raksti mums",
+      "subject": "Tēma",
+      "question": "Ziņa",
+      "sendMessage": "Sagatavot ziņu",
+      "sourceNote": "Saturs migrēts no korismaska.lv WordPress eksporta.",
+      "collaborationText": "Koris veidojis projektus ar Rihardu Zaļupi, Jāni Šipkēvicu, Vestardu Šimku, Renāti Stivriņu, Lauru Jēkabsoni, grupu Pērkons un daudziem citiem Latvijas mūziķiem. Īpaši MASKAI skaņdarbus radījuši Vytautas Miškinis, Pärt Uusberg un Laura Jēkabsone."
+    },
+    "en": {
+      "nav": [
+        [
+          "About",
+          "about"
+        ],
+        [
+          "Concerts",
+          "concerts"
+        ],
+        [
+          "Music",
+          "music"
+        ],
+        [
+          "Join",
+          "join"
+        ],
+        [
+          "Contact",
+          "contact"
+        ]
+      ],
+      "heroEyebrow": "Babīte Culture and Education Centre, Mārupe municipality",
+      "heroTitle": "Mixed choir MASKA",
+      "heroLead": "Founded in 2000. Conductor and artistic director Jānis Ozols. Choral music where classical repertoire meets rock, folk song and new commissions.",
+      "listen": "Listen to the choir",
+      "join": "Join the choir",
+      "aboutTitle": "About MASKA",
+      "aboutLead": "Mixed choir “MASKA” is one of the leading amateur choirs in Latvia.",
+      "about1": "The choir was founded in 2000 by Jānis Ozols, who has been its conductor and artistic director from the first day. Together, “MASKA” and Jānis Ozols form a creative partnership with its own charm and style — able to perform classical choral music and willing to be different.",
+      "about2": "The repertoire spans a wide range of genres, from sacred to folk music and from classical to contemporary, always looking for new ways to interpret and enrich a performance.",
+      "about3": "The choir works with internationally recognised Latvian musicians, including Rihards Zaļupis, Renāte Stivriņa, Jānis Šipkēvics and Vestards Šimkus.",
+      "aboutMore": "Conductor, history and achievements",
+      "founded": "Year founded",
+      "albums": "Albums released",
+      "years": "Years together",
+      "concertsNews": "Concerts and news",
+      "allNews": "Full news archive",
+      "news": "News",
+      "latestTitle": "MASKA at the Béla Bartók International Choir Competition 2026 in Hungary",
+      "latestBody": "In early July, MASKA represented Latvia at the prestigious international choral competition in Hungary.",
+      "programs": "Concert programmes",
+      "musicTitle": "Listen and watch",
+      "musicLead": "Albums, video and voice parts in one place — for listeners and singers.",
+      "recordings": "Recordings",
+      "recordingsNote": "Three albums and individual works.",
+      "video": "Video",
+      "videoNote": "Concert recordings and music videos.",
+      "voices": "Voice parts",
+      "voicesNote": "A rehearsal archive arranged by voice.",
+      "joinEyebrow": "We are looking for new singers",
+      "joinTitle": "Your voice can join MASKA",
+      "joinLead": "If singing is your thing and you want to do it with a group that dares to be different, come to a rehearsal and talk to the conductor.",
+      "apply": "Apply to sing",
+      "rehearsals": "Rehearsals",
+      "venue": "Venue",
+      "gettingThere": "Getting there",
+      "president": "Choir president",
+      "rehearsalValue": "Mondays and Wednesdays, 18:15–21:15",
+      "venueValue": "Babīte Secondary School, Jūrmalas iela 17, Piņķi",
+      "travelValue": "Bus 4 and 32 (stop “Piņķi”), free parking",
+      "contactEyebrow": "Get in touch",
+      "footerBlurb": "Mixed choir of the Babīte Culture and Education Centre, Mārupe municipality. Conductor Jānis Ozols.",
+      "pages": "Pages",
+      "contact": "Contact",
+      "follow": "Follow",
+      "archive": "Archive",
+      "aboutPageLead": "A creative partnership with its own charm and style — from classical choral music to bold new projects.",
+      "choir": "The choir",
+      "conductor": "Conductor",
+      "achievements": "Achievements",
+      "collaboration": "Collaboration",
+      "conductorRole": "Conductor and artistic director",
+      "conductorText1": "Jānis Ozols founded MASKA and has been its conductor and artistic director since 2000. Under his leadership, it has grown into one of Latvia’s most distinctive amateur choirs.",
+      "conductorText2": "A graduate of the Jāzeps Vītols Latvian Academy of Music, Jānis has received several best conductor awards at international competitions.",
+      "concertsLead": "The latest events, concert programmes and more than fifteen years of choir news.",
+      "allYears": "All years",
+      "loadMore": "Show more",
+      "albumsTitle": "Albums and recordings",
+      "videoTitle": "Selected videos",
+      "singersTitle": "Voice parts for singers",
+      "musicPageLead": "Choir albums, concert videos and an extensive rehearsal archive from the WordPress media library.",
+      "albumDedication": "The choir’s third album, featuring music by Latvian composers.",
+      "albumZiema": "An album of Christmas compositions by Laura Jēkabsone.",
+      "albumGospels": "Rihards Zaļupe’s “7 Stories of the Gospel of Thomas”.",
+      "listenSpotify": "Listen on Spotify",
+      "singerArchive": "384 rehearsal recordings from the choir archive, organised by work and voice part. Choose a piece to listen to or download your part.",
+      "joinPageLead": "MASKA welcomes new singers. Send a short application and we will contact you about the next rehearsal.",
+      "whatToExpect": "What to expect",
+      "expectation1": "Two rehearsals each week at Babīte Secondary School.",
+      "expectation2": "A broad repertoire and concerts in Latvia and abroad.",
+      "expectation3": "Focused work in a friendly and creative ensemble.",
+      "formTitle": "Choir application",
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "voice": "Voice part (if known)",
+      "message": "A little about your musical experience",
+      "send": "Prepare email",
+      "privacy": "This opens your email application. The website does not store your application data.",
+      "contactPageLead": "For concerts, collaborations, joining the choir and press materials.",
+      "general": "General enquiries",
+      "social": "Social media",
+      "location": "Rehearsal venue",
+      "openMap": "Open Google Maps",
+      "writeUs": "Write to us",
+      "subject": "Subject",
+      "question": "Message",
+      "sendMessage": "Prepare message",
+      "sourceNote": "Content migrated from the korismaska.lv WordPress export.",
+      "collaborationText": "The choir has created projects with Rihards Zaļupis, Jānis Šipkēvics, Vestards Šimkus, Renāte Stivriņa, Laura Jēkabsone, Pērkons and many other Latvian musicians. Vytautas Miškinis, Pärt Uusberg and Laura Jēkabsone have written works especially for MASKA."
+    }
+  },
+  "details": {
+    "choirName": "Koris MASKA",
+    "conductor": "Jānis Ozols",
+    "president": "Monta Ripa",
+    "generalEmail": "korismaska@korismaska.lv",
+    "presidentEmail": "montaripa@gmail.com",
+    "phone": "+371 26 634 512",
+    "phoneHref": "+37126634512",
+    "address": "Babītes vidusskola, Jūrmalas iela 17, Piņķi",
+    "mapUrl": "https://maps.app.goo.gl/Am6Tg93FS5QgWUMF6",
+    "facebook": "https://www.facebook.com/KorisMaska",
+    "instagram": "https://instagram.com/korismaska",
+    "spotify": "https://open.spotify.com/artist/7jzRITMWcHedZES1LHWBSm"
+  },
+  "media": {
+    "logo": "/media/maska-logo.png",
+    "homeHero": "/media/MASKA_small_vertical.jpg",
+    "aboutHero": "/media/CODICF227-1.jpg",
+    "concertsHero": "/media/WhatsApp-Image-2026-07-05-at-17.47.35-scaled.jpeg",
+    "musicHero": "/media/MASKA-pie-ESTONIA.jpg",
+    "joinHero": "/media/054Mixed-Choir-Maska-Letonia.jpg",
+    "contactHero": "/media/IMG_2232.jpg",
+    "conductorPortrait": "/media/JanisOzols.jpg"
+  },
+  "achievements": {
+    "lv": [
+      {
+        "year": "2011",
+        "title": "Barcelona",
+        "text": "Grand Prix ar maksimālo vērtējumu — 100 punkti."
+      },
+      {
+        "year": "2012",
+        "title": "Harald Andersen",
+        "text": "1. vieta un žūrijas speciālbalva Helsinkos."
+      },
+      {
+        "year": "2014",
+        "title": "World Choir Games",
+        "text": "Pasaules čempionu tituls Rīgā."
+      },
+      {
+        "year": "2015",
+        "title": "Maribor",
+        "text": "Eiropas koru Grand Prix fināls."
+      },
+      {
+        "year": "2017",
+        "title": "Tallinn",
+        "text": "15. starptautiskā koru konkursa Grand Prix."
+      },
+      {
+        "year": "2019",
+        "title": "Eurovision Choir",
+        "text": "2. vieta konkursā Gēteborgā."
+      }
+    ],
+    "en": [
+      {
+        "year": "2011",
+        "title": "Barcelona",
+        "text": "Grand Prix with the maximum score of 100 points."
+      },
+      {
+        "year": "2012",
+        "title": "Harald Andersen",
+        "text": "First prize and the jury’s special award in Helsinki."
+      },
+      {
+        "year": "2014",
+        "title": "World Choir Games",
+        "text": "World Champion title in Riga."
+      },
+      {
+        "year": "2015",
+        "title": "Maribor",
+        "text": "European Grand Prix for Choral Singing final."
+      },
+      {
+        "year": "2017",
+        "title": "Tallinn",
+        "text": "Grand Prix at the 15th International Choir Competition."
+      },
+      {
+        "year": "2019",
+        "title": "Eurovision Choir",
+        "text": "Second place in Gothenburg."
+      }
+    ]
+  },
+  "programmes": {
+    "lv": [
+      {
+        "tag": "2024",
+        "title": "MASKA. Pērkons. A cappella",
+        "text": "Vienpadsmit leģendāri “Pērkona” hiti kora balsīs.",
+        "postSlug": "apvienojot-kormuziku-ar-rokmuziku-radita-unikala-koncertprogramma-maska-perkons-a-cappella"
+      },
+      {
+        "tag": "Koncertprogrammas",
+        "title": "ZieMASKAsvētki",
+        "text": "Ikgadēja Adventa tradīcija ar jaundarbu pirmatskaņojumiem.",
+        "postSlug": "ziemaskasvetki-cosmos"
+      },
+      {
+        "tag": "Koncertprogrammas",
+        "title": "W. A. Mozart. Requiem",
+        "text": "Desire Dondeyne versija ar solistiem.",
+        "postSlug": "koris-maska-lielaja-piektdiena-aicina-uz-mocarta-rekviemu"
+      }
+    ],
+    "en": [
+      {
+        "tag": "2024",
+        "title": "MASKA. Pērkons. A cappella",
+        "text": "Eleven legendary Pērkons hits sung a cappella.",
+        "postSlug": "apvienojot-kormuziku-ar-rokmuziku-radita-unikala-koncertprogramma-maska-perkons-a-cappella"
+      },
+      {
+        "tag": "Concert programmes",
+        "title": "ZieMASKAsvētki",
+        "text": "The annual Advent concert with premieres written for the choir.",
+        "postSlug": "ziemaskasvetki-cosmos"
+      },
+      {
+        "tag": "Concert programmes",
+        "title": "W. A. Mozart. Requiem",
+        "text": "The version by Desire Dondeyne, with soloists.",
+        "postSlug": "koris-maska-lielaja-piektdiena-aicina-uz-mocarta-rekviemu"
+      }
+    ]
+  },
+  "albums": [
+    {
+      "title": "Dedication",
+      "year": "2019",
+      "image": "/media/Dedication_Spotify_3000x3000.jpg",
+      "description": {
+        "lv": "Kora trešais albums ar latviešu komponistu darbiem.",
+        "en": "The choir’s third album, featuring music by Latvian composers."
+      },
+      "url": "https://open.spotify.com/album/0wSjqJkM2Va0uhwQ2jXzHH"
+    },
+    {
+      "title": "Ziema",
+      "year": "2015",
+      "image": "/media/Ziema.jpg",
+      "description": {
+        "lv": "Lauras Jēkabsones Ziemassvētku kompozīciju albums.",
+        "en": "An album of Christmas compositions by Laura Jēkabsone."
+      },
+      "url": "https://open.spotify.com/album/05O3Ff5DfrIinOfOHD5lxk"
+    },
+    {
+      "title": "7 Stories of the Gospel of Thomas",
+      "year": "2010",
+      "image": "/media/7GOSPEL.jpg",
+      "description": {
+        "lv": "Riharda Zaļupes “7 Stories of the Gospel of Thomas”.",
+        "en": "Rihards Zaļupe’s “7 Stories of the Gospel of Thomas”."
+      },
+      "url": "https://open.spotify.com/album/0qBmV1cxCGNqYmIiqXuBFU"
+    }
+  ],
+  "videos": [
+    {
+      "title": "HOUSE WARMING | Gather Together",
+      "youtubeId": "Lt0D8FuTQQc"
+    },
+    {
+      "title": "Jānis Šipkēvics — BAOBABA dziesma",
+      "youtubeId": "Rzja4BYoRdc"
+    },
+    {
+      "title": "Es nesatiku tevi",
+      "youtubeId": "mhK3C3TGVxE"
+    },
+    {
+      "title": "Ir jāpaliek mājās",
+      "youtubeId": "YvdZI1r0P8M"
+    }
+  ],
+  "stats": [
+    {
+      "value": "2000",
+      "labelKey": "founded"
+    },
+    {
+      "value": "3",
+      "labelKey": "albums"
+    },
+    {
+      "value": "26",
+      "labelKey": "years"
+    }
+  ],
+  "voices": {
+    "lv": [
+      "1. soprāns",
+      "2. soprāns",
+      "1. alts",
+      "2. alts",
+      "1. tenors",
+      "2. tenors",
+      "Baritons",
+      "Bass"
+    ],
+    "en": [
+      "Soprano 1",
+      "Soprano 2",
+      "Alto 1",
+      "Alto 2",
+      "Tenor 1",
+      "Tenor 2",
+      "Baritone",
+      "Bass"
+    ]
+  },
+  "voiceOptions": [
+    "Soprāns / Soprano",
+    "Alts / Alto",
+    "Tenors / Tenor",
+    "Bass"
+  ]
+}
