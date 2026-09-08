@@ -148,12 +148,30 @@ function home() {
     </main>`;
 }
 
+function personCard(person, index) {
+  const occupation = person.occupation?.[state.lang] || person.occupation?.lv || "";
+  const label = person.label?.[state.lang] || person.label?.lv || "";
+  const text = person.text?.[state.lang] || person.text?.lv || "";
+  const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+  return `<section class="section story-grid ${index % 2 === 0 ? "flip" : ""}">
+    <div><img class="portrait" src="${escapeHtml(person.photo || FALLBACK_POST_IMAGE)}" alt="${escapeHtml(person.name)}" loading="lazy"></div>
+    <div class="leader-card">
+      ${occupation ? `<p class="eyebrow">${escapeHtml(occupation)}</p>` : ""}
+      <h2>${escapeHtml(person.name)}</h2>
+      ${label ? `<p class="role">${escapeHtml(label)}</p>` : ""}
+      ${paragraphs.length ? `<div class="prose">${paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>` : ""}
+    </div>
+  </section>`;
+}
+
 function about() {
   const c = t();
   const achievements = site.achievements[state.lang];
+  const people = site.people || [];
   return `<main id="main">
     ${pageHero(c.heroEyebrow, c.aboutTitle, c.aboutPageLead, site.media.aboutHero)}
     <section class="section story-grid"><div><img class="portrait" src="${site.media.conductorPortrait}" alt="${site.details.conductor}"></div><div class="leader-card"><p class="eyebrow">${c.conductor}</p><h2>${site.details.conductor}</h2><p class="role">${c.conductorRole}</p><div class="prose"><p>${c.conductorText1}</p><p>${c.conductorText2}</p><p>${c.about2}</p><p>${c.about3}</p></div></div></section>
+    ${people.map((person, index) => personCard(person, index)).join("")}
     <section class="section surface"><h2 class="section-title">${c.achievements}</h2><div class="rule"></div><div class="achievement-grid">${achievements.map(({ year, title, text }) => `<article class="achievement"><span class="year">${escapeHtml(year)}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div></section>
     <section class="section"><div class="section-head"><div><h2 class="section-title">${c.collaboration}</h2><div class="rule"></div></div></div><div class="prose"><p>${c.collaborationText}</p></div></section>
     ${joinBand()}

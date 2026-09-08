@@ -1,5 +1,5 @@
 let selectedPostId = null;
-let selectedIndex = { achievements: null, albums: null, videos: null };
+let selectedIndex = { achievements: null, albums: null, videos: null, people: null };
 let activeTab = "site";
 
 const escape = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
@@ -132,6 +132,17 @@ const videoForm = (item) => `
   <label class="admin-field"><span>Video nosaukums</span><input name="title" required value="${escape(item?.title || "")}"></label>
   <label class="admin-field"><span>YouTube saite vai ID</span><input name="youtubeId" required value="${escape(item?.youtubeId || "")}" placeholder="https://www.youtube.com/watch?v=..."></label>`;
 
+const personForm = (item) => `
+  <label class="admin-field"><span>Vārds</span><input name="name" required value="${escape(item?.name || "")}"></label>
+  <label class="admin-field"><span>Foto</span><div class="media-input"><input id="person-image" name="photo" value="${escape(item?.photo || "")}" placeholder="/media/..."><label class="upload-button">Augšupielādēt<input data-upload-target="#person-image" type="file" accept="image/*" hidden></label></div></label>
+  <div class="admin-language-grid">
+    ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
+      <label class="admin-field"><span>Amats</span><input name="occupation.${language}" ${language === "lv" ? "required" : ""} value="${escape(item?.occupation?.[language] || "")}" placeholder="Diriģents"></label>
+      <label class="admin-field"><span>Iezīme</span><input name="label.${language}" value="${escape(item?.label?.[language] || "")}" placeholder="Mākslinieciskais vadītājs"></label>
+      <label class="admin-field"><span>Teksts</span><textarea name="text.${language}" rows="8">${escape(item?.text?.[language] || "")}</textarea></label>
+    </fieldset>`).join("")}
+  </div>`;
+
 const collectionView = (content) => {
   if (activeTab === "achievements") {
     const items = achievementItems(content);
@@ -152,6 +163,15 @@ const collectionView = (content) => {
       form: albumForm
     });
   }
+  if (activeTab === "people") {
+    return listEditor({
+      kind: "people",
+      items: (content.people || []).map((item) => ({ raw: item, meta: item.occupation?.lv || item.occupation?.en || "", label: item.name })),
+      labels: { kicker: "Par kori", title: "Cilvēki", lead: "Pievieno kora cilvēkus lapai Par kori: foto, amats, vārds, iezīme un teksts. Foto uz lapas pārmaiņus ir pa kreisi un pa labi.", add: "Jauns cilvēks" },
+      emptyTitle: "Pievienot cilvēku",
+      form: personForm
+    });
+  }
   return listEditor({
     kind: "videos",
     items: (content.videos || []).map((item) => ({ raw: item, meta: item.youtubeId, label: item.title })),
@@ -167,6 +187,7 @@ export const adminView = (content, posts) => {
     ["site", "Vietnes saturs"],
     ["posts", `Jaunumi <span>${posts.length}</span>`],
     ["achievements", `Sasniegumi <span>${(content.achievements?.lv || []).length}</span>`],
+    ["people", `Cilvēki <span>${(content.people || []).length}</span>`],
     ["albums", `Albumi <span>${(content.albums || []).length}</span>`],
     ["videos", `Video <span>${(content.videos || []).length}</span>`]
   ];
@@ -180,7 +201,7 @@ export const adminView = (content, posts) => {
         </aside>
         <section class="admin-main">
           ${activeTab === "site" ? `
-            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, albumus un video pievieno atsevišķās sadaļās.</p></div>
+            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, cilvēkus, albumus un video pievieno atsevišķās sadaļās.</p></div>
             <form id="quick-site-form" class="admin-content-form">
               <details open><summary>Kontaktinformācija</summary><div class="admin-form-grid">${detailFields(content)}</div></details>
               <details><summary>Latviešu teksti</summary><div class="admin-form-grid">${stringFields(content, "lv")}</div></details>
@@ -238,6 +259,15 @@ const itemFromForm = (kind, data) => {
       image: String(data.get("image") || "").trim(),
       url: String(data.get("url") || "").trim(),
       description: { lv: String(data.get("description.lv") || "").trim(), en: String(data.get("description.en") || "").trim() }
+    };
+  }
+  if (kind === "people") {
+    return {
+      name: String(data.get("name") || "").trim(),
+      photo: String(data.get("photo") || "").trim(),
+      occupation: { lv: String(data.get("occupation.lv") || "").trim(), en: String(data.get("occupation.en") || "").trim() },
+      label: { lv: String(data.get("label.lv") || "").trim(), en: String(data.get("label.en") || "").trim() },
+      text: { lv: String(data.get("text.lv") || "").trim(), en: String(data.get("text.en") || "").trim() }
     };
   }
   return {

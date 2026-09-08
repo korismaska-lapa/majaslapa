@@ -361,6 +361,9 @@ button { cursor: pointer; }
 .chip:hover, .chip.active { border-color: var(--ink); color: #fff; background: var(--ink); }
 
 .story-grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr); gap: clamp(34px, 6vw, 80px); align-items: start; }
+.story-grid.flip { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
+.story-grid.flip > :first-child { order: 2; }
+.story-grid.flip > :last-child { order: 1; }
 .portrait { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(1); }
 .leader-card { border-bottom: 1px solid var(--line); padding-bottom: 36px; }
 .leader-card h2 { margin: 0 0 6px; font-size: 34px; }
@@ -696,6 +699,7 @@ button { cursor: pointer; }
   .main-nav a { padding: 11px 0; font-size: 18px; }
   .lang-switch { align-self: start; }
   .home-about, .feature-grid, .story-grid { grid-template-columns: 1fr; }
+  .story-grid.flip > :first-child, .story-grid.flip > :last-child { order: 0; }
   .music-cards, .album-grid, .news-grid, .achievement-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: repeat(2, 1fr); }
   .admin-workspace { grid-template-columns: 1fr; }
