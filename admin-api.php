@@ -251,7 +251,9 @@ if ($route === "upload" && $method === "POST") {
 if ($route === "posts") {
   require_admin();
   $id = $_GET["id"] ?? "";
-  if ($method === "POST") {
+  $action = $_GET["action"] ?? "";
+  $isDelete = $method === "DELETE" || ($method === "POST" && $action === "delete");
+  if ($method === "POST" && !$isDelete) {
     $post = normalize_post(json_input());
     $path = $postsDir . "/" . post_filename($post);
     if (is_file($path)) send_json(409, ["error" => "A post with this date and URL identifier already exists"]);
@@ -280,13 +282,13 @@ if ($route === "posts") {
     if ($oldFile && $oldFile !== $newFile && is_file($oldFile)) @unlink($oldFile);
     send_json(200, ["post" => $post]);
   }
-  if ($method === "DELETE" && $id !== "") {
-    foreach (read_posts() as $item) {
-      if ((string) ($item["id"] ?? "") === (string) $id) {
-        @unlink($postsDir . "/" . post_filename($item));
-        http_response_code(204);
-        exit;
-      }
+  if ($isDelete && $id !== "") {
+    foreach (glob($postsDir . "/*.json") ?: [] as $file) {
+      $item = json_decode(file_get_contents($file), true);
+      if (!is_array($item) || (string) ($item["id"] ?? "") !== (string) $id) continue;
+      if (!@unlink($file)) send_json(500, ["error" => "Cannot delete post"]);
+      http_response_code(204);
+      exit;
     }
     send_json(404, ["error" => "Post not found"]);
   }

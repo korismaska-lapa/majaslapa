@@ -9,6 +9,34 @@ LOG="$DEPLOYPATH/tmp/deploy.log"
 exec >>"$LOG" 2>&1
 echo "=== $(date -Iseconds) deploy start ==="
 
+seed_posts_once() {
+  local dest="$1"
+  local seed="$2"
+  mkdir -p "$dest/data/content/posts"
+  if [ -f "$dest/data/content/.initialized" ]; then
+    echo "Live posts already initialized; not restoring deleted news from git"
+    return 0
+  fi
+  shopt -s nullglob
+  local live_posts=("$dest/data/content/posts"/*.json)
+  shopt -u nullglob
+  if [ ${#live_posts[@]} -gt 0 ]; then
+    echo "Live posts already present; marking CMS initialized"
+    date +%s > "$dest/data/content/.initialized"
+    return 0
+  fi
+  if [ -d "$seed/posts" ]; then
+    for f in "$seed/posts"/*.json; do
+      [ -f "$f" ] || continue
+      base="$(basename "$f")"
+      if [ ! -f "$dest/data/content/posts/$base" ]; then
+        cp "$f" "$dest/data/content/posts/$base"
+      fi
+    done
+  fi
+  date +%s > "$dest/data/content/.initialized"
+}
+
 preserve_live_cms() {
   local dest="$1"
   mkdir -p "$dest/data/content/posts"
@@ -19,15 +47,7 @@ preserve_live_cms() {
   if [ ! -f "$dest/data/content/voices.json" ] && [ -f "$dest/content/voices.json" ]; then
     cp "$dest/content/voices.json" "$dest/data/content/voices.json"
   fi
-  if [ -d "$dest/content/posts" ]; then
-    for f in "$dest/content/posts"/*.json; do
-      [ -f "$f" ] || continue
-      base="$(basename "$f")"
-      if [ ! -f "$dest/data/content/posts/$base" ]; then
-        cp "$f" "$dest/data/content/posts/$base"
-      fi
-    done
-  fi
+  seed_posts_once "$dest" "$dest/content"
   if [ -f "$dest/data/content/site.json" ]; then
     echo "Live CMS kept at data/content/site.json"
   fi
@@ -44,15 +64,7 @@ seed_missing_cms() {
   if [ ! -f "$dest/data/content/voices.json" ] && [ -f "$seed/voices.json" ]; then
     cp "$seed/voices.json" "$dest/data/content/voices.json"
   fi
-  if [ -d "$seed/posts" ]; then
-    for f in "$seed/posts"/*.json; do
-      [ -f "$f" ] || continue
-      base="$(basename "$f")"
-      if [ ! -f "$dest/data/content/posts/$base" ]; then
-        cp "$f" "$dest/data/content/posts/$base"
-      fi
-    done
-  fi
+  seed_posts_once "$dest" "$seed"
 }
 
 SRC="$(pwd -P)"

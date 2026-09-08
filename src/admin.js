@@ -48,19 +48,25 @@ const parseApiResponse = async (response) => {
 };
 
 export const request = async (url, options = {}) => {
+  const method = String(options.method || "GET").toUpperCase();
   const init = {
     ...options,
     cache: "no-store",
     credentials: "same-origin",
     headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
   };
-  const tryUrl = async (target) => parseApiResponse(await fetch(target, init));
   const php = phpUrl(url);
-  const order = php ? [php, url] : [url];
+  const attempts = [];
+  if (php) {
+    attempts.push(method === "DELETE"
+      ? { url: `${php}${php.includes("?") ? "&" : "?"}action=delete`, init: { ...init, method: "POST" } }
+      : { url: php, init });
+  }
+  attempts.push({ url, init });
   let lastError;
-  for (const target of order) {
+  for (const attempt of attempts) {
     try {
-      return await tryUrl(target);
+      return await parseApiResponse(await fetch(attempt.url, attempt.init));
     } catch (error) {
       if (error.fromJson) throw error;
       lastError = error instanceof ApiError ? error : new ApiError("Serveris neatbild.");
@@ -429,9 +435,14 @@ export function bindAdmin({ content, posts, refresh, navigate }) {
   });
   document.querySelector("#delete-post")?.addEventListener("click", async () => {
     if (!confirm("Vai tiešām dzēst šo ierakstu?")) return;
-    await request(`/api/admin/posts/${selectedPostId}`, { method: "DELETE" });
-    selectedPostId = null;
-    await refresh(true);
+    const form = document.querySelector("#post-form");
+    try {
+      await request(`/api/admin/posts/${selectedPostId}`, { method: "DELETE" });
+      selectedPostId = null;
+      await refresh(true);
+    } catch (exception) {
+      showStatus(form, exception.message, true);
+    }
   });
 
   document.querySelectorAll("[data-kind]").forEach((form) => form.addEventListener("submit", async (event) => {

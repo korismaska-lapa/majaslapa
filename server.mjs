@@ -19,14 +19,19 @@ const copyIfMissing = async (from, to) => {
 
 const seedContent = join(root, "content");
 const liveContent = join(root, "data", "content");
+const initializedMarker = join(liveContent, ".initialized");
 await mkdir(join(liveContent, "posts"), { recursive: true });
 await copyIfMissing(join(seedContent, "site.json"), join(liveContent, "site.json"));
 await copyIfMissing(join(seedContent, "voices.json"), join(liveContent, "voices.json"));
-if (existsSync(join(seedContent, "posts"))) {
+const livePostFiles = existsSync(join(liveContent, "posts"))
+  ? (await readdir(join(liveContent, "posts"))).filter((name) => name.endsWith(".json"))
+  : [];
+if (!existsSync(initializedMarker) && livePostFiles.length === 0 && existsSync(join(seedContent, "posts"))) {
   for (const file of (await readdir(join(seedContent, "posts"))).filter((name) => name.endsWith(".json"))) {
     await copyIfMissing(join(seedContent, "posts", file), join(liveContent, "posts", file));
   }
 }
+if (!existsSync(initializedMarker)) await writeFile(initializedMarker, `${Date.now()}\n`);
 
 const siteFile = join(liveContent, "site.json");
 const voicesFile = join(liveContent, "voices.json");

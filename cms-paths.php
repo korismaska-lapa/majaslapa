@@ -11,9 +11,16 @@ function maska_content_dir($root) {
   if (!is_file($live . "/voices.json") && is_file($seed . "/voices.json")) {
     @copy($seed . "/voices.json", $live . "/voices.json");
   }
-  foreach (glob($seed . "/posts/*.json") ?: [] as $file) {
-    $dest = $live . "/posts/" . basename($file);
-    if (!is_file($dest)) @copy($file, $dest);
+  $marker = $live . "/.initialized";
+  $livePosts = glob($live . "/posts/*.json") ?: [];
+  if (!is_file($marker) && !$livePosts) {
+    foreach (glob($seed . "/posts/*.json") ?: [] as $file) {
+      $dest = $live . "/posts/" . basename($file);
+      if (!is_file($dest)) @copy($file, $dest);
+    }
+  }
+  if (!is_file($marker)) {
+    @file_put_contents($marker, (string) time());
   }
   return $live;
 }
