@@ -333,7 +333,24 @@ button { cursor: pointer; }
   line-height: 1.08;
   text-wrap: balance;
 }
+.page-hero.article-hero::before { display: none; }
 .page-hero.article-hero .page-hero-inner { max-width: min(1100px, 100%); }
+.page-hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08);
+  transform-origin: center top;
+}
+.page-hero.logo-fallback .page-hero-photo {
+  object-fit: contain;
+  transform: none;
+  padding: 18%;
+  background: var(--deep);
+}
 .page-hero.article-hero h1 {
   max-width: none;
   font-size: clamp(28px, 3.4vw, 44px);

@@ -90,10 +90,15 @@ function footer() {
     </footer>`;
 }
 
-const pageHero = (eyebrow, title, lead, image, extraClass = "") => `
-  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}" style="--hero-image:url(${JSON.stringify(mediaSrc(image))})">
+const pageHero = (eyebrow, title, lead, image, extraClass = "") => {
+  const src = mediaSrc(image);
+  const article = extraClass.includes("article-hero");
+  return `
+  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}"${article ? "" : ` style="--hero-image:url('${escapeHtml(src).replace(/'/g, "%27")}')"`}>
+    ${article ? mediaImg(src, "", "page-hero-photo") : ""}
     <div class="page-hero-inner"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lead ? `<p>${lead}</p>` : ""}</div>
   </section>`;
+};
 
 function joinBand() {
   const c = t();
