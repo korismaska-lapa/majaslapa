@@ -78,6 +78,13 @@ if [ -z "$NPM" ]; then
   done
 fi
 
+for name in contact about concerts music join news login admin en; do
+  if [ -d "$DEPLOYPATH/$name" ] && [ ! -f "$DEPLOYPATH/$name/index.html" ]; then
+    echo "Removing leftover folder $name"
+    rm -rf "$DEPLOYPATH/$name"
+  fi
+done
+
 cd "$DEPLOYPATH"
 rm -rf "$DEPLOYPATH/dist"
 rm -f "$DEPLOYPATH/assets/index-CP4zyoKn.js" "$DEPLOYPATH/assets/index-DLStGuYu.css"
@@ -91,6 +98,20 @@ if [ -n "$NPM" ]; then
   if [ -f "$DEPLOYPATH/.htaccess" ]; then
     echo "Pointing Passenger at $NODE"
     sed -i "s|^PassengerNodejs \".*\"|PassengerNodejs \"$NODE\"|" "$DEPLOYPATH/.htaccess"
+    if ! grep -q "MASKA SPA" "$DEPLOYPATH/.htaccess"; then
+      echo "Adding SPA rewrite for inner pages"
+      cat >> "$DEPLOYPATH/.htaccess" << 'EOF'
+
+# MASKA SPA
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+</IfModule>
+EOF
+    fi
   fi
 else
   echo "ERROR: Node 16+ was not found. In cPanel open Setup Node.js App and switch this app from Node 10 to Node 20, then deploy again."

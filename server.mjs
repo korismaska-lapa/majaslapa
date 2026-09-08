@@ -401,7 +401,9 @@ app.use((request, response, next) => {
   const index = join(root, "index.html");
   if (!existsSync(index)) return next();
   response.set("Cache-Control", "no-store, no-cache, must-revalidate");
-  response.sendFile(index);
+  response.sendFile(index, (error) => {
+    if (error && !response.headersSent) next(error);
+  });
 });
 
 app.use((error, _request, response, _next) => {
