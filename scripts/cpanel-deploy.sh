@@ -106,10 +106,22 @@ if [ -n "$NPM" ]; then
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/send-mail\.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [L]
 </IfModule>
+<FilesMatch "^send-mail\.php$">
+  PassengerEnabled off
+</FilesMatch>
+EOF
+    fi
+    if ! grep -q "send-mail" "$DEPLOYPATH/.htaccess"; then
+      cat >> "$DEPLOYPATH/.htaccess" << 'EOF'
+
+<FilesMatch "^send-mail\.php$">
+  PassengerEnabled off
+</FilesMatch>
 EOF
     fi
   fi

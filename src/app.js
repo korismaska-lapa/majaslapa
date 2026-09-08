@@ -400,11 +400,19 @@ function bind() {
     button.disabled = true;
     note.classList.remove("ok", "error");
     try {
-      const response = await fetch("/api/contact", {
+      const payloadBody = JSON.stringify({ kind: form.dataset.kind, ...values });
+      let response = await fetch("/send-mail.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: form.dataset.kind, ...values })
+        body: payloadBody
       });
+      if (!response.ok) {
+        response = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payloadBody
+        });
+      }
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "send failed");
       form.reset();
