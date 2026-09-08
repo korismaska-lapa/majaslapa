@@ -10,16 +10,32 @@ exec >>"$LOG" 2>&1
 echo "=== $(date -Iseconds) deploy start ==="
 
 echo "Copying files to $DEPLOYPATH"
-/usr/bin/rsync -a --delete \
-  --exclude '.git/' \
-  --exclude 'node_modules/' \
-  --exclude 'tmp/' \
-  --exclude 'media/' \
-  --exclude 'public/media/voices/' \
-  --exclude 'public/media/uploads/' \
-  --exclude '.htaccess' \
-  --exclude '.cpanel.yml' \
-  ./ "$DEPLOYPATH/"
+RSYNC="$(command -v rsync || true)"
+if [ -n "$RSYNC" ]; then
+  echo "Using $RSYNC"
+  "$RSYNC" -a \
+    --exclude '.git/' \
+    --exclude 'node_modules/' \
+    --exclude 'tmp/' \
+    --exclude 'media/' \
+    --exclude 'public/media/voices/' \
+    --exclude 'public/media/uploads/' \
+    --exclude '.htaccess' \
+    --exclude '.cpanel.yml' \
+    ./ "$DEPLOYPATH/"
+else
+  echo "rsync not found, using tar"
+  /bin/tar -cf - \
+    --exclude='.git' \
+    --exclude='node_modules' \
+    --exclude='tmp' \
+    --exclude='media' \
+    --exclude='public/media/voices' \
+    --exclude='public/media/uploads' \
+    --exclude='.htaccess' \
+    --exclude='.cpanel.yml' \
+    . | /bin/tar -xf - -C "$DEPLOYPATH"
+fi
 
 NPM=""
 NODE=""
