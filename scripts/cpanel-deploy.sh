@@ -80,6 +80,8 @@ fi
 
 cd "$DEPLOYPATH"
 rm -rf "$DEPLOYPATH/dist"
+rm -f "$DEPLOYPATH/assets/index-CP4zyoKn.js" "$DEPLOYPATH/assets/index-DLStGuYu.css"
+printf '%s\n' "maska-build form2" "$(date -Iseconds)" > "$DEPLOYPATH/deploy-check.txt"
 echo "index.html -> $(grep -o 'index-[A-Za-z0-9_-]*\.js' "$DEPLOYPATH/index.html" || echo missing)"
 if [ -n "$NPM" ]; then
   echo "Using $($NODE -v) / npm $($NPM -v)"

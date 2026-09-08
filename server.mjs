@@ -79,6 +79,13 @@ await mkdir(uploadsDirectory, { recursive: true });
 
 const app = express();
 
+app.use((request, response, next) => {
+  if (request.method === "GET" && !request.path.includes(".")) {
+    response.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  }
+  next();
+});
+
 app.use("/media", express.static(join(root, "public", "media")));
 app.use("/media", express.static(join(root, "media")));
 app.use("/assets", express.static(join(root, "assets")));
