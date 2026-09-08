@@ -81,7 +81,6 @@ const app = express();
 
 app.use("/media", express.static(join(root, "public", "media")));
 app.use("/media", express.static(join(root, "media")));
-app.use("/assets", express.static(join(root, "dist", "assets")));
 app.use("/assets", express.static(join(root, "assets")));
 app.use(express.static(join(root, "public")));
 app.use(express.static(root));
@@ -343,9 +342,11 @@ if (dataRoot !== root) app.use(express.static(join(dataRoot, "public")));
 app.use(express.static(join(root, "public")));
 
 if (production) {
-  app.use(express.static(join(root, "dist")));
   app.use((request, response, next) => {
-    if (request.method === "GET" && request.accepts("html")) return response.sendFile(join(root, "dist", "index.html"));
+    if (request.method === "GET" && request.accepts("html")) {
+      response.set("Cache-Control", "no-store");
+      return response.sendFile(join(root, "index.html"));
+    }
     next();
   });
 } else {

@@ -79,6 +79,8 @@ if [ -z "$NPM" ]; then
 fi
 
 cd "$DEPLOYPATH"
+rm -rf "$DEPLOYPATH/dist"
+echo "index.html -> $(grep -o 'index-[A-Za-z0-9_-]*\.js' "$DEPLOYPATH/index.html" || echo missing)"
 if [ -n "$NPM" ]; then
   echo "Using $($NODE -v) / npm $($NPM -v)"
   PATH="$(dirname "$NPM"):$PATH"
