@@ -254,10 +254,37 @@ function join() {
   return `<main id="main">
     ${pageHero(c.joinEyebrow, c.joinTitle, c.joinPageLead, site.media.joinHero)}
     <section class="section contact-grid">
-      <div><h2 class="section-title">${c.whatToExpect}</h2><div class="rule"></div><div class="contact-list"><div class="contact-item"><span>01</span><strong>${c.expectation1}</strong></div><div class="contact-item"><span>02</span><strong>${c.expectation2}</strong></div><div class="contact-item"><span>03</span><strong>${c.expectation3}</strong></div></div></div>
-      <div><h2 class="section-title">${c.formTitle}</h2><div class="rule"></div>${applicationForm(c)}</div>
+      <div>
+        <h2 class="section-title">${c.whatToExpect}</h2>
+        <div class="join-card">
+          <div class="join-expect">
+            <div class="contact-item"><span>01</span><strong>${c.expectation1}</strong></div>
+            <div class="contact-item"><span>02</span><strong>${c.expectation2}</strong></div>
+            <div class="contact-item"><span>03</span><strong>${c.expectation3}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="section-title">${c.formTitle}</h2>
+        <div class="join-card">${applicationForm(c)}</div>
+      </div>
     </section>
-    <section class="section surface contact-grid"><a class="map-link" href="${d.mapUrl}" target="_blank" rel="noreferrer"><h3>${c.venue}</h3><p>${d.address}</p><span class="text-link" style="color:white">${c.openMap} →</span></a><div><dl class="facts" style="background:var(--ink);padding:28px"><div class="fact"><dt>${c.rehearsals}</dt><dd>${c.rehearsalValue}</dd></div><div class="fact"><dt>${c.gettingThere}</dt><dd>${c.travelValue}</dd></div><div class="fact"><dt>${c.president}</dt><dd>${d.president} · ${d.presidentEmail} · ${d.phone}</dd></div></dl></div></section>
+    <section class="section join-place">
+      <a class="join-place-card map-link" href="${d.mapUrl}" target="_blank" rel="noreferrer">
+        <div>
+          <h3>${c.venue}</h3>
+          <p>${d.address}</p>
+        </div>
+        <span class="text-link">${c.openMap} →</span>
+      </a>
+      <div class="join-place-card">
+        <dl class="facts">
+          <div class="fact"><dt>${c.rehearsals}</dt><dd>${c.rehearsalValue}</dd></div>
+          <div class="fact"><dt>${c.gettingThere}</dt><dd>${c.travelValue}</dd></div>
+          <div class="fact"><dt>${c.president}</dt><dd>${d.president} · ${d.presidentEmail} · ${d.phone}</dd></div>
+        </dl>
+      </div>
+    </section>
   </main>`;
 }
 
