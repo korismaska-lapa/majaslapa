@@ -34,6 +34,14 @@ const postHref = (post) => href(`news/${encodeURIComponent(post.slug)}`);
 const t = () => copy[state.lang];
 const escapeHtml = (value = "") => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const FALLBACK_POST_IMAGE = "/media/maska-placeholder.jpg";
+const defaultCarousel = () => [1, 2, 3, 4].map((n) => ({ image: `/media/slide${n}.jpg`, alt: { lv: "", en: "" } }));
+const carouselSlides = () => {
+  const items = Array.isArray(site.carousel) ? site.carousel : defaultCarousel();
+  return items.map((item) => ({
+    image: String(item?.image || "").trim(),
+    alt: item?.alt?.[state.lang] || item?.alt?.lv || ""
+  })).filter((item) => item.image);
+};
 const mediaSrc = (src) => String(src || "").trim() || FALLBACK_POST_IMAGE;
 const mediaImg = (src, alt = "", className = "") => {
   const path = mediaSrc(src);
@@ -124,6 +132,23 @@ function programmeCard(item) {
   </a>`;
 }
 
+function homeCarousel() {
+  const slides = carouselSlides();
+  if (!slides.length) return "";
+  const previous = state.lang === "lv" ? "Iepriekšējais attēls" : "Previous image";
+  const next = state.lang === "lv" ? "Nākamais attēls" : "Next image";
+  return `<div class="home-carousel" data-carousel>
+    <div class="home-carousel-viewport">
+      ${slides.map((slide, index) => `<img src="${escapeHtml(slide.image)}" alt="${escapeHtml(slide.alt)}" class="home-carousel-slide${index === 0 ? " is-active" : ""}"${index === 0 ? "" : " loading=\"lazy\""} onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}'">`).join("")}
+      ${slides.length > 1 ? `
+        <button class="home-carousel-nav prev" type="button" data-carousel-prev aria-label="${previous}"></button>
+        <button class="home-carousel-nav next" type="button" data-carousel-next aria-label="${next}"></button>
+        <div class="home-carousel-dots">${slides.map((_, index) => `<button type="button" class="${index === 0 ? "is-active" : ""}" data-carousel-dot="${index}" aria-label="${index + 1}"></button>`).join("")}</div>
+      ` : ""}
+    </div>
+  </div>`;
+}
+
 function home() {
   const c = t();
   return `
@@ -134,8 +159,8 @@ function home() {
         </div>
       </section>
       <section class="section home-about">
-        <div><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
-        <div class="stat-list">${site.stats.map((stat) => `<div class="stat"><span>${escapeHtml(c[stat.labelKey] || stat.labelKey)}</span><strong>${escapeHtml(stat.value)}</strong></div>`).join("")}</div>
+        <div class="home-about-copy"><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
+        ${homeCarousel()}
       </section>
       <section class="section surface">
         <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link" href="${href("concerts")}" data-route>${c.allNews}</a></div>
@@ -346,6 +371,7 @@ async function loadContent() {
       const content = JSON.parse(text);
       site = content.site;
       copy = site.copy;
+      if (!Array.isArray(site.carousel)) site.carousel = defaultCarousel();
       posts = content.posts;
       voiceTracks = content.voices || voiceTracks;
       return;
@@ -395,6 +421,47 @@ function navigate(url) {
   render();
 }
 
+let carouselTimer = null;
+function bindCarousel() {
+  if (carouselTimer) {
+    clearInterval(carouselTimer);
+    carouselTimer = null;
+  }
+  const root = document.querySelector("[data-carousel]");
+  const slides = [...(root?.querySelectorAll(".home-carousel-slide") || [])];
+  if (!root || slides.length < 2) return;
+  const dots = [...root.querySelectorAll("[data-carousel-dot]")];
+  let index = Math.max(0, slides.findIndex((slide) => slide.classList.contains("is-active")));
+  const go = (next) => {
+    slides[index].classList.remove("is-active");
+    dots[index]?.classList.remove("is-active");
+    index = (next + slides.length) % slides.length;
+    slides[index].classList.add("is-active");
+    dots[index]?.classList.add("is-active");
+  };
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const start = () => {
+    if (reduceMotion) return;
+    clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => go(index + 1), 5000);
+  };
+  root.querySelector("[data-carousel-prev]")?.addEventListener("click", () => {
+    go(index - 1);
+    start();
+  });
+  root.querySelector("[data-carousel-next]")?.addEventListener("click", () => {
+    go(index + 1);
+    start();
+  });
+  dots.forEach((dot) => dot.addEventListener("click", () => {
+    go(Number(dot.dataset.carouselDot));
+    start();
+  }));
+  root.addEventListener("mouseenter", () => clearInterval(carouselTimer));
+  root.addEventListener("mouseleave", start);
+  start();
+}
+
 function bind() {
   document.querySelectorAll("[data-route]").forEach((link) => link.addEventListener("click", (event) => {
     const url = new URL(link.href, location.origin);
@@ -410,6 +477,7 @@ function bind() {
     if (state.adminAuthenticated) bindAdmin({ content: site, posts, refresh: refreshAdmin, navigate });
     return;
   }
+  bindCarousel();
   document.querySelector(".menu-toggle")?.addEventListener("click", () => {
     state.menu = !state.menu;
     document.body.classList.toggle("menu-open", state.menu);

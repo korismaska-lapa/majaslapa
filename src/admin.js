@@ -1,5 +1,5 @@
 let selectedPostId = null;
-let selectedIndex = { achievements: null, albums: null, videos: null, people: null };
+let selectedIndex = { achievements: null, albums: null, videos: null, people: null, carousel: null };
 let activeTab = "site";
 
 const escape = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
@@ -191,6 +191,15 @@ const videoForm = (item) => `
   <label class="admin-field"><span>Video nosaukums</span><input name="title" required value="${escape(item?.title || "")}"></label>
   <label class="admin-field"><span>YouTube saite vai ID</span><input name="youtubeId" required value="${escape(item?.youtubeId || "")}" placeholder="https://www.youtube.com/watch?v=..."></label>`;
 
+const carouselForm = (item) => `
+  <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="carousel-image" name="image" required value="${escape(item?.image || "")}" placeholder="/media/slide1.jpg"><label class="upload-button">Augšupielādēt<input data-upload-target="#carousel-image" type="file" accept="image/*" hidden></label></div></label>
+  <p class="admin-help">Karuselis rāda attēlu ainavas rāmī 16:10, tāpat kā jaunumu sīktēlu. Cita proporcija tiek aizpildīta līdz malām.</p>
+  <div class="admin-language-grid">
+    ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
+      <label class="admin-field"><span>Alt teksts</span><input name="alt.${language}" value="${escape(item?.alt?.[language] || "")}" placeholder="Īss apraksts (nav obligāts)"></label>
+    </fieldset>`).join("")}
+  </div>`;
+
 const personForm = (item) => `
   <label class="admin-field"><span>Vārds</span><input name="name" required value="${escape(item?.name || "")}"></label>
   <label class="admin-field"><span>Foto</span><div class="media-input"><input id="person-image" name="photo" value="${escape(item?.photo || "")}" placeholder="/media/..."><label class="upload-button">Augšupielādēt<input data-upload-target="#person-image" type="file" accept="image/*" hidden></label></div></label>
@@ -231,6 +240,19 @@ const collectionView = (content) => {
       form: personForm
     });
   }
+  if (activeTab === "carousel") {
+    return listEditor({
+      kind: "carousel",
+      items: (content.carousel || []).map((item) => ({
+        raw: item,
+        meta: "Sākums",
+        label: String(item.image || "").split("/").pop() || "Attēls"
+      })),
+      labels: { kicker: "Sākums", title: "Karuselis", lead: "Sākuma lapas attēli blakus sadaļai Par kori. Secība ir tāda pati kā sarakstā. Dzēs, lai noņemtu no karuseļa.", add: "Jauns attēls" },
+      emptyTitle: "Pievienot attēlu",
+      form: carouselForm
+    });
+  }
   return listEditor({
     kind: "videos",
     items: (content.videos || []).map((item) => ({ raw: item, meta: item.youtubeId, label: item.title })),
@@ -247,6 +269,7 @@ export const adminView = (content, posts) => {
     ["posts", `Jaunumi <span>${posts.length}</span>`],
     ["achievements", `Sasniegumi <span>${(content.achievements?.lv || []).length}</span>`],
     ["people", `Cilvēki <span>${(content.people || []).length}</span>`],
+    ["carousel", `Karuselis <span>${(content.carousel || []).length}</span>`],
     ["albums", `Albumi <span>${(content.albums || []).length}</span>`],
     ["videos", `Video <span>${(content.videos || []).length}</span>`]
   ];
@@ -260,7 +283,7 @@ export const adminView = (content, posts) => {
         </aside>
         <section class="admin-main">
           ${activeTab === "site" ? `
-            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, cilvēkus, albumus un video pievieno atsevišķās sadaļās.</p></div>
+            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, cilvēkus, karuseļa attēlus, albumus un video pievieno atsevišķās sadaļās.</p></div>
             <form id="quick-site-form" class="admin-content-form">
               <details open><summary>Kontaktinformācija</summary><div class="admin-form-grid">${detailFields(content)}</div></details>
               <details><summary>Latviešu teksti</summary><div class="admin-form-grid">${stringFields(content, "lv")}</div></details>
@@ -322,6 +345,12 @@ const itemFromForm = (kind, data) => {
       image: String(data.get("image") || "").trim(),
       url: String(data.get("url") || "").trim(),
       description: { lv: String(data.get("description.lv") || "").trim(), en: String(data.get("description.en") || "").trim() }
+    };
+  }
+  if (kind === "carousel") {
+    return {
+      image: String(data.get("image") || "").trim(),
+      alt: { lv: String(data.get("alt.lv") || "").trim(), en: String(data.get("alt.en") || "").trim() }
     };
   }
   if (kind === "people") {

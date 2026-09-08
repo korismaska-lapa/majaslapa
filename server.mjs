@@ -286,7 +286,8 @@ const validateSite = (value) => {
     && Array.isArray(value.programmes?.lv) && Array.isArray(value.programmes?.en)
     && Array.isArray(value.albums) && Array.isArray(value.videos)
     && Array.isArray(value.voices?.lv) && Array.isArray(value.voices?.en)
-    && (!value.people || Array.isArray(value.people));
+    && (!value.people || Array.isArray(value.people))
+    && (!value.carousel || Array.isArray(value.carousel));
   if (!valid) throw Object.assign(new Error("Required site sections are missing or malformed"), { status: 400 });
 };
 

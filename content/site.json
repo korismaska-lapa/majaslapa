@@ -445,6 +445,24 @@
       "labelKey": "years"
     }
   ],
+  "carousel": [
+    {
+      "image": "/media/slide1.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide2.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide3.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide4.jpg",
+      "alt": { "lv": "", "en": "" }
+    }
+  ],
   "voices": {
     "lv": [
       "1. soprāns",

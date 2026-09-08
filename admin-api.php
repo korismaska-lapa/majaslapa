@@ -119,7 +119,8 @@ function site_valid($value) {
     && isset($value["albums"], $value["videos"], $value["voices"]["lv"], $value["voices"]["en"])
     && is_array($value["albums"]) && is_array($value["videos"])
     && is_array($value["voices"]["lv"]) && is_array($value["voices"]["en"])
-    && (!isset($value["people"]) || is_array($value["people"]));
+    && (!isset($value["people"]) || is_array($value["people"]))
+    && (!isset($value["carousel"]) || is_array($value["carousel"]));
 }
 
 function read_posts() {
