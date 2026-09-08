@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
-import { readdir, readFile, rename, unlink, writeFile, mkdir } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import express from "express";
 import multer from "multer";
-import nodemailer from "nodemailer";
 
 const root = resolve(".");
 const production = process.argv.includes("--production") || process.env.NODE_ENV === "production";
@@ -39,39 +39,66 @@ const mailFrom = process.env.MAIL_FROM || "Koris MASKA <korismaska@korismaska.lv
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const clip = (value, max) => String(value || "").trim().slice(0, max);
+const mailLog = join(dataRoot, "tmp", "mail-error.log");
+const encodeSubject = (value) => `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
 
-const createMailTransport = () => {
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS || "" } : undefined
-    });
-  }
-  return nodemailer.createTransport({
-    sendmail: true,
-    newline: "unix",
-    path: process.env.SENDMAIL_PATH || "/usr/sbin/sendmail"
+const runProcess = (command, args, input = "", env = {}) => new Promise((resolvePromise, reject) => {
+  const child = spawn(command, args, { env: { ...process.env, ...env } });
+  let stderr = "";
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  child.on("error", reject);
+  child.on("close", (code) => {
+    if (code === 0) resolvePromise();
+    else reject(new Error(stderr.trim() || `${command} exited ${code}`));
+  });
+  child.stdin.end(input);
+});
+
+const sendViaSendmail = (message) => {
+  const raw = [
+    `From: ${message.from}`,
+    `To: ${message.to}`,
+    `Reply-To: ${message.replyTo}`,
+    `Subject: ${encodeSubject(message.subject)}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=UTF-8",
+    "",
+    message.text,
+    ""
+  ].join("\n");
+  const bin = [
+    process.env.SENDMAIL_PATH,
+    "/usr/sbin/sendmail",
+    "/usr/lib/sendmail",
+    "/usr/bin/sendmail"
+  ].find((path) => path && existsSync(path));
+  if (!bin) return Promise.reject(new Error("sendmail not found"));
+  return runProcess(bin, ["-i", "-t"], raw);
+};
+
+const sendViaPhp = (message) => {
+  const php = ["/usr/local/bin/php", "/usr/bin/php"].find((bin) => existsSync(bin));
+  if (!php) return Promise.reject(new Error("php not found"));
+  const code = "mail(getenv('MAIL_TO'),getenv('MAIL_SUBJECT'),file_get_contents('php://stdin'),'From: '.getenv('MAIL_FROM').\"\\r\\nReply-To: \".getenv('MAIL_REPLY').\"\\r\\nContent-Type: text/plain; charset=UTF-8\")||exit(1);";
+  return runProcess(php, ["-r", code], message.text, {
+    MAIL_TO: message.to,
+    MAIL_SUBJECT: message.subject,
+    MAIL_FROM: message.from,
+    MAIL_REPLY: message.replyTo
   });
 };
 
 const sendContactMail = async (message) => {
-  try {
-    await createMailTransport().sendMail(message);
-  } catch (sendmailError) {
-    if (process.env.SMTP_HOST) throw sendmailError;
+  const errors = [];
+  for (const send of [sendViaSendmail, sendViaPhp]) {
     try {
-      await nodemailer.createTransport({
-        host: "127.0.0.1",
-        port: 25,
-        secure: false,
-        tls: { rejectUnauthorized: false }
-      }).sendMail(message);
-    } catch {
-      throw sendmailError;
+      await send(message);
+      return;
+    } catch (error) {
+      errors.push(error.message);
     }
   }
+  throw new Error(errors.join(" | "));
 };
 
 await mkdir(postsDirectory, { recursive: true });
@@ -271,13 +298,15 @@ app.post("/api/contact", async (request, response, next) => {
     await sendContactMail({
       from: mailFrom,
       to: contactTo,
-      replyTo: `${name} <${email}>`,
+      replyTo: `"${name.replace(/["\r\n]/g, "")}" <${email}>`,
       subject,
       text: lines
     });
     response.json({ sent: true });
   } catch (error) {
     console.error(error);
+    await mkdir(join(dataRoot, "tmp"), { recursive: true });
+    await appendFile(mailLog, `${new Date().toISOString()} ${error.stack || error}\n`).catch(() => {});
     response.status(500).json({ error: "The message could not be sent." });
   }
 });
