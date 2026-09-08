@@ -245,6 +245,11 @@ button { cursor: pointer; }
 .prose-lead { margin: 0 0 18px; color: var(--ink); font-size: 18px; font-weight: 600; line-height: 1.65; }
 .prose { max-width: 72ch; font-size: 15px; line-height: 1.78; text-align: justify; text-wrap: pretty; }
 .section > .prose { margin-inline: auto; }
+#voices > .prose {
+  margin-inline: 0;
+  max-width: none;
+  text-align: left;
+}
 .prose p { margin: 0 0 17px; }
 .stat-list { display: grid; gap: 1px; border-top: 3px solid var(--teal); background: var(--line); }
 .stat {
