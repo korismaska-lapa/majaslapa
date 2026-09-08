@@ -3,11 +3,12 @@ import { spawn } from "node:child_process";
 import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import multer from "multer";
 
-const root = resolve(".");
-const production = process.argv.includes("--production") || process.env.NODE_ENV === "production";
+const root = dirname(fileURLToPath(import.meta.url));
+const production = process.argv.includes("--production") || process.env.NODE_ENV === "production" || Boolean(process.env.PASSENGER_STARTED_AT || process.env.PASSENGER_APP_ENV);
 const dataRoot = resolve(process.env.DATA_DIR || root);
 const siteFile = join(dataRoot, "content", "site.json");
 const voicesFile = join(dataRoot, "content", "voices.json");
@@ -377,19 +378,23 @@ app.post("/api/admin/upload", requireAdmin, upload.single("file"), (request, res
 if (dataRoot !== root) app.use(express.static(join(dataRoot, "public")));
 app.use(express.static(join(root, "public")));
 
-if (production) {
-  app.use((request, response, next) => {
-    if (request.method === "GET" && request.accepts("html")) {
-      response.set("Cache-Control", "no-store");
-      return response.sendFile(join(root, "index.html"));
-    }
-    next();
-  });
-} else {
-  const { createServer } = await import("vite");
-  const vite = await createServer({ root, server: { middlewareMode: true }, appType: "spa" });
-  app.use(vite.middlewares);
+if (!production) {
+  try {
+    const { createServer } = await import("vite");
+    const vite = await createServer({ root, server: { middlewareMode: true }, appType: "spa" });
+    app.use(vite.middlewares);
+  } catch (error) {
+    console.warn("Vite is not available; using the production HTML fallback.");
+  }
 }
+
+app.use((request, response, next) => {
+  if (request.method !== "GET" || request.path.startsWith("/api")) return next();
+  const index = join(root, "index.html");
+  if (!existsSync(index)) return next();
+  response.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  response.sendFile(index);
+});
 
 app.use((error, _request, response, _next) => {
   console.error(error);
