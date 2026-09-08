@@ -205,7 +205,7 @@ function about() {
     ${pageHero(c.heroEyebrow, c.aboutTitle, c.aboutPageLead, site.media.aboutHero)}
     ${people.map((person, index) => personCard(person, index)).join("")}
     <section class="section surface"><h2 class="section-title">${c.achievements}</h2><div class="rule"></div><div class="achievement-grid">${achievements.map(({ year, title, text }) => `<article class="achievement"><span class="year">${escapeHtml(year)}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div></section>
-    <section class="section"><div class="section-head"><div><h2 class="section-title">${c.collaboration}</h2><div class="rule"></div></div></div><div class="prose"><p>${c.collaborationText}</p></div></section>
+    <section class="section about-collaboration"><div class="section-head"><div><h2 class="section-title">${c.collaboration}</h2><div class="rule"></div></div></div><div class="prose"><p>${c.collaborationText}</p></div></section>
     ${joinBand()}
   </main>`;
 }
