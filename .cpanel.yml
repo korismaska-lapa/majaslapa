@@ -1,7 +1,4 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/korismas/maskastests.cpanel.site
-    - /usr/bin/rsync -a --delete --exclude '.git/' --exclude 'node_modules/' --exclude 'tmp/' --exclude 'media/' --exclude 'public/media/voices/' --exclude 'public/media/uploads/' --exclude '.htaccess' --exclude '.cpanel.yml' ./ $DEPLOYPATH/
-    - source /home/korismas/nodevenv/maskastests.cpanel.site/10/bin/activate && cd $DEPLOYPATH && npm install --omit=dev
-    - mkdir -p $DEPLOYPATH/tmp && /bin/touch $DEPLOYPATH/tmp/restart.txt
+    - /bin/bash ./scripts/cpanel-deploy.sh
