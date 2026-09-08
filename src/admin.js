@@ -114,7 +114,7 @@ const postEditor = (posts) => {
         <label class="admin-field"><span>Datums</span><input type="date" name="date" required value="${escape(value(["date"], new Date().toISOString().slice(0, 10)))}"></label>
         <label class="admin-field"><span>URL identifikators</span><input name="slug" value="${escape(value(["slug"]))}" placeholder="izveidosies-no-virsraksta"></label>
       </div>
-      <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="post-image" name="image" value="${escape(value(["image"], "/media/MASKA_small_vertical.jpg"))}"><label class="upload-button">Augšupielādēt<input id="media-upload" type="file" accept="image/*,audio/*,.pdf" hidden></label></div></label>
+      <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="post-image" name="image" value="${escape(value(["image"], "/media/maska-placeholder.jpg"))}"><label class="upload-button">Augšupielādēt<input id="media-upload" type="file" accept="image/*,audio/*,.pdf" hidden></label></div></label>
       <div class="admin-language-grid">
         ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
           <label class="admin-field"><span>Virsraksts</span><input name="title.${language}" ${language === "lv" ? "required" : ""} value="${escape(value(["title", language]))}"></label>

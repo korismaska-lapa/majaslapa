@@ -346,10 +346,10 @@ button { cursor: pointer; }
   transform-origin: center top;
 }
 .page-hero.logo-fallback .page-hero-photo {
-  object-fit: contain;
+  object-fit: cover;
   transform: none;
-  padding: 18%;
-  background: var(--deep);
+  padding: 0;
+  background: #000;
 }
 .page-hero.article-hero h1 {
   max-width: none;
@@ -357,10 +357,10 @@ button { cursor: pointer; }
   line-height: 1.15;
 }
 .page-hero.logo-fallback::before {
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  background-color: var(--deep);
+  background-color: #000;
   transform: none;
 }
 .page-hero p:last-child { max-width: 48em; margin: 22px 0 0; color: #e1e5e7; font-size: 17px; line-height: 1.65; }
@@ -411,9 +411,9 @@ button { cursor: pointer; }
 .feature-card img.logo-fallback,
 .album img.logo-fallback,
 .portrait.logo-fallback {
-  object-fit: contain;
-  background: var(--deep);
-  padding: 18%;
+  object-fit: cover;
+  background: #000;
+  padding: 0;
   filter: none;
 }
 .news-card-body { padding: 21px 22px 24px; display: flex; flex: 1; flex-direction: column; }

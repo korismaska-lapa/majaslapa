@@ -175,7 +175,7 @@ function normalize_post($input, $existing = []) {
       "en" => substr(trim((string) ($input["excerpt"]["en"] ?? ($body["en"][0] ?? ""))), 0, 320)
     ],
     "body" => $body,
-    "image" => (string) ($input["image"] ?? ($existing["image"] ?? "/media/MASKA_small_vertical.jpg"))
+    "image" => (string) ($input["image"] ?? ($existing["image"] ?? "/media/maska-placeholder.jpg"))
   ];
 }
 

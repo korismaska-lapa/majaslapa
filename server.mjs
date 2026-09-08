@@ -317,7 +317,7 @@ const normalizePost = (input, existing = {}) => {
     title,
     excerpt,
     body,
-    image: String(input.image || existing.image || "/media/MASKA_small_vertical.jpg")
+    image: String(input.image || existing.image || "/media/maska-placeholder.jpg")
   };
 };
 

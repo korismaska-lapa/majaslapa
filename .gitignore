@@ -3,7 +3,7 @@ dist/
 .env
 .env.*
 !.env.example
-media/
+/media/
 public/media/voices/
 public/media/uploads/
 data/

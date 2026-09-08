@@ -102,6 +102,10 @@ seed_missing_cms "$DEPLOYPATH" "$(pwd -P)/content"
 chmod 755 "$DEPLOYPATH"
 mkdir -p "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/tmp" "$DEPLOYPATH/data/content/posts"
 chmod 755 "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/data" "$DEPLOYPATH/data/content" "$DEPLOYPATH/data/content/posts" 2>/dev/null || true
+if [ -f "$DEPLOYPATH/public/media/maska-placeholder.jpg" ]; then
+  cp -f "$DEPLOYPATH/public/media/maska-placeholder.jpg" "$DEPLOYPATH/media/maska-placeholder.jpg"
+  chmod 644 "$DEPLOYPATH/media/maska-placeholder.jpg" 2>/dev/null || true
+fi
 chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" \
   "$DEPLOYPATH/send-mail.php" "$DEPLOYPATH/admin-api.php" "$DEPLOYPATH/content-api.php" "$DEPLOYPATH/cms-paths.php" 2>/dev/null || true
 if [ -f "$DEPLOYPATH/.htaccess" ]; then

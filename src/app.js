@@ -33,7 +33,7 @@ const href = (name = "") => `${state.lang === "en" ? "/en" : ""}${name && name !
 const postHref = (post) => href(`news/${encodeURIComponent(post.slug)}`);
 const t = () => copy[state.lang];
 const escapeHtml = (value = "") => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-const FALLBACK_POST_IMAGE = "/media/maska-logo.png";
+const FALLBACK_POST_IMAGE = "/media/maska-placeholder.jpg";
 const mediaSrc = (src) => String(src || "").trim() || FALLBACK_POST_IMAGE;
 const mediaImg = (src, alt = "", className = "") => {
   const path = mediaSrc(src);
@@ -212,7 +212,7 @@ function article() {
   const c = t();
   const post = posts.find((item) => item.slug === articleSlug());
   if (!post) {
-    return `<main id="main">${pageHero(c.news, "404", state.lang === "lv" ? "Šāds jaunums nav atrasts." : "This article could not be found.", "/media/MASKA_small_vertical.jpg")}<section class="section"><a class="button" href="${href("concerts")}" data-route>${c.allNews}</a></section></main>`;
+    return `<main id="main">${pageHero(c.news, "404", state.lang === "lv" ? "Šāds jaunums nav atrasts." : "This article could not be found.", FALLBACK_POST_IMAGE)}<section class="section"><a class="button" href="${href("concerts")}" data-route>${c.allNews}</a></section></main>`;
   }
 
   const title = escapeHtml(post.title[state.lang] || post.title.lv);
