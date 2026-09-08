@@ -46,6 +46,8 @@ fi
 
 # tar of "." can leave the site folder as 700, which Apache/LiteSpeed serves as 403
 chmod 755 "$DEPLOYPATH"
+mkdir -p "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" "$DEPLOYPATH/tmp"
+chmod 755 "$DEPLOYPATH/media/uploads" "$DEPLOYPATH/public/media/uploads" 2>/dev/null || true
 chmod 644 "$DEPLOYPATH/index.html" "$DEPLOYPATH/server.mjs" "$DEPLOYPATH/package.json" \
   "$DEPLOYPATH/send-mail.php" "$DEPLOYPATH/admin-api.php" "$DEPLOYPATH/content-api.php" 2>/dev/null || true
 if [ -f "$DEPLOYPATH/.htaccess" ]; then
@@ -123,6 +125,7 @@ RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/send-mail\.php
 RewriteCond %{REQUEST_URI} !^/admin-api\.php
 RewriteCond %{REQUEST_URI} !^/content-api\.php
+RewriteCond %{REQUEST_URI} !^/media/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [L]
@@ -132,6 +135,23 @@ EOF
   if grep -q "MASKA SPA" "$HTACCESS" && ! grep -q "REQUEST_METHOD" "$HTACCESS"; then
     echo "SPA rewrite GET-only so /api is never HTML"
     sed -i "s/RewriteEngine On/RewriteEngine On\\nRewriteCond %{REQUEST_METHOD} GET/" "$HTACCESS"
+  fi
+  if grep -q "MASKA SPA" "$HTACCESS" && ! grep -q 'REQUEST_URI.*media' "$HTACCESS"; then
+    echo "Keeping /media/ out of the SPA rewrite"
+    sed -i '/RewriteCond %{REQUEST_URI} !\^\/api/a RewriteCond %{REQUEST_URI} !^/media/' "$HTACCESS"
+  fi
+  if ! grep -q "MASKA MEDIA" "$HTACCESS"; then
+    echo "Serving public/media files at /media"
+    cat >> "$HTACCESS" << 'EOF'
+
+# MASKA MEDIA
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{DOCUMENT_ROOT}/public/media/$1 -f
+RewriteRule ^media/(.+)$ public/media/$1 [L]
+</IfModule>
+EOF
   fi
   if grep -q "MASKA SPA" "$HTACCESS" && ! grep -q 'REQUEST_URI.*admin-api' "$HTACCESS"; then
     echo "Excluding PHP APIs from SPA rewrite"

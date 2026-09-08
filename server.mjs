@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
-import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile } from "node:fs/promises";
+import { readdir, readFile, rename, unlink, writeFile, mkdir, appendFile, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +13,8 @@ const dataRoot = resolve(process.env.DATA_DIR || root);
 const siteFile = join(dataRoot, "content", "site.json");
 const voicesFile = join(dataRoot, "content", "voices.json");
 const postsDirectory = join(dataRoot, "content", "posts");
-const uploadsDirectory = join(dataRoot, "public", "media", "uploads");
+const uploadsDirectory = join(dataRoot, "media", "uploads");
+const publicUploadsDirectory = join(dataRoot, "public", "media", "uploads");
 const port = Number(process.env.PORT) || 5173;
 const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 
@@ -220,6 +221,7 @@ const sendContactMail = async (message) => {
 
 await mkdir(postsDirectory, { recursive: true }).catch((error) => console.error("posts dir", error));
 await mkdir(uploadsDirectory, { recursive: true }).catch((error) => console.error("uploads dir", error));
+await mkdir(publicUploadsDirectory, { recursive: true }).catch((error) => console.error("public uploads dir", error));
 
 const app = express();
 app.disable("x-powered-by");
@@ -458,8 +460,14 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (_request, file, callback) => callback(null, /^(image|audio)\//.test(file.mimetype) || file.mimetype === "application/pdf")
 });
-app.post("/api/admin/upload", requireAdmin, upload.single("file"), (request, response) => {
+app.post("/api/admin/upload", requireAdmin, upload.single("file"), async (request, response) => {
   if (!request.file) return response.status(400).json({ error: "No supported file supplied" });
+  try {
+    await mkdir(publicUploadsDirectory, { recursive: true });
+    await copyFile(request.file.path, join(publicUploadsDirectory, request.file.filename));
+  } catch (error) {
+    console.error("upload copy", error);
+  }
   response.status(201).json({ path: `/media/uploads/${request.file.filename}` });
 });
 

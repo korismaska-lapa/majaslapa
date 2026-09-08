@@ -5,14 +5,14 @@ header("Cache-Control: no-store");
 $root = __DIR__;
 $siteFile = $root . "/content/site.json";
 $postsDir = $root . "/content/posts";
-$uploadDir = $root . "/public/media/uploads";
 $sessionDir = $root . "/tmp/admin-sess";
 $loginFile = $root . "/tmp/admin-login.json";
 $passwordEncoded = "VGFzdHVuZGFuYWshITExMQ==";
 
 @mkdir($root . "/tmp", 0755, true);
 @mkdir($sessionDir, 0700, true);
-@mkdir($uploadDir, 0755, true);
+@mkdir($root . "/media/uploads", 0755, true);
+@mkdir($root . "/public/media/uploads", 0755, true);
 
 $route = $_GET["r"] ?? "";
 $method = $_SERVER["REQUEST_METHOD"] ?? "GET";
@@ -177,6 +177,23 @@ function normalize_post($input, $existing = []) {
   ];
 }
 
+function save_upload($tmp, $filename) {
+  global $root;
+  $saved = null;
+  foreach ([$root . "/media/uploads", $root . "/public/media/uploads"] as $dir) {
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) continue;
+    $dest = $dir . "/" . $filename;
+    if ($saved === null) {
+      if (!move_uploaded_file($tmp, $dest)) continue;
+      $saved = $dest;
+    } elseif (!is_file($dest)) {
+      @copy($saved, $dest);
+    }
+    @chmod($dest, 0644);
+  }
+  return $saved;
+}
+
 function post_filename($post) {
   return ($post["date"] ?? "") . "-" . ($post["slug"] ?? "post") . ".json";
 }
@@ -215,12 +232,13 @@ if ($route === "upload" && $method === "POST") {
   if (empty($_FILES["file"]["tmp_name"])) send_json(400, ["error" => "No supported file supplied"]);
   $name = $_FILES["file"]["name"] ?? "upload";
   $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-  if (!in_array($ext, ["jpg", "jpeg", "png", "gif", "webp", "svg", "pdf", "mp3", "wav", "ogg"], true)) {
+  if (!in_array($ext, ["jpg", "jpeg", "jfif", "png", "gif", "webp", "svg", "pdf", "mp3", "wav", "ogg"], true)) {
     send_json(400, ["error" => "No supported file supplied"]);
   }
   $safe = preg_replace("/[^a-z0-9]+/", "-", strtolower(pathinfo($name, PATHINFO_FILENAME)));
+  $safe = trim($safe, "-") ?: "photo";
   $filename = time() . "-" . substr($safe, 0, 80) . "." . $ext;
-  if (!move_uploaded_file($_FILES["file"]["tmp_name"], $uploadDir . "/" . $filename)) {
+  if (!save_upload($_FILES["file"]["tmp_name"], $filename)) {
     send_json(500, ["error" => "Upload failed"]);
   }
   http_response_code(201);
