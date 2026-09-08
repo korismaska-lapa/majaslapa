@@ -23,6 +23,19 @@ function maska_content_dir($root) {
         $site["copy"]["en"]["listen"] = "Our music";
         $copyChanged = true;
       }
+      foreach (array(array("lv", "Koncerti", "Jaunumi & Koncerti"), array("en", "Concerts", "News & Concerts")) as $pair) {
+        $lang = $pair[0];
+        $from = $pair[1];
+        $to = $pair[2];
+        $nav = $site["copy"][$lang]["nav"] ?? null;
+        if (!is_array($nav)) continue;
+        foreach ($nav as $i => $item) {
+          if (is_array($item) && ($item[1] ?? "") === "concerts" && ($item[0] ?? "") === $from) {
+            $site["copy"][$lang]["nav"][$i][0] = $to;
+            $copyChanged = true;
+          }
+        }
+      }
       if ($copyChanged) {
         @file_put_contents($live . "/site.json", json_encode($site, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n");
       }

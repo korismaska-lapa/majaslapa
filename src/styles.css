@@ -71,8 +71,9 @@ button { cursor: pointer; }
   color: #fff;
   border-bottom: 2px solid transparent;
   font: 600 14px/1 var(--display);
-  letter-spacing: .09em;
+  letter-spacing: .06em;
   text-transform: uppercase;
+  white-space: nowrap;
   transition: 140ms ease-out;
 }
 .main-nav a:hover, .main-nav a.active { color: var(--teal); border-color: var(--teal); }

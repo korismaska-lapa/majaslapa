@@ -46,6 +46,15 @@ if (existsSync(siteFile)) {
     liveSite.copy.en.listen = "Our music";
     copyChanged = true;
   }
+  const renameNav = (nav, route, from, to) => {
+    if (!Array.isArray(nav)) return false;
+    const item = nav.find((entry) => Array.isArray(entry) && entry[1] === route);
+    if (!item || item[0] !== from) return false;
+    item[0] = to;
+    return true;
+  };
+  if (renameNav(liveSite.copy?.lv?.nav, "concerts", "Koncerti", "Jaunumi & Koncerti")) copyChanged = true;
+  if (renameNav(liveSite.copy?.en?.nav, "concerts", "Concerts", "News & Concerts")) copyChanged = true;
   if (copyChanged) await writeFile(siteFile, `${JSON.stringify(liveSite, null, 2)}\n`);
 }
 const postsDirectory = join(liveContent, "posts");
