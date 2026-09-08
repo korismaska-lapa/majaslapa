@@ -214,13 +214,16 @@ const formatDate = (date) => new Intl.DateTimeFormat(state.lang === "lv" ? "lv-L
 
 function concerts() {
   const c = t();
-  const years = [...new Set(posts.map((post) => post.date.slice(0, 4)))];
+  const years = [...new Set(posts.map((post) => post.date.slice(0, 4)))].sort((a, b) => b.localeCompare(a));
   const filtered = state.year ? posts.filter((post) => post.date.startsWith(state.year)) : posts;
   const shown = filtered.slice(0, state.visiblePosts);
   return `<main id="main">
     ${pageHero(c.news, c.concertsNews, c.concertsLead, site.media.concertsHero)}
     <section class="section surface">
-      <div class="tabs"><button class="chip ${state.year === "" ? "active" : ""}" type="button" data-year="">${c.allYears}</button>${years.map((year) => `<button class="chip ${state.year === year ? "active" : ""}" type="button" data-year="${year}">${year}</button>`).join("")}</div>
+      <div class="year-filter">
+        <div class="tabs"><button class="chip ${state.year === "" ? "active" : ""}" type="button" data-year="">${c.allYears}</button>${years.map((year) => `<button class="chip ${state.year === year ? "active" : ""}" type="button" data-year="${year}">${year}</button>`).join("")}</div>
+        <label class="year-select"><select id="year-filter" aria-label="${escapeHtml(c.allYears)}"><option value="">${state.lang === "lv" ? "Visi" : "All"}</option>${years.map((year) => `<option value="${year}" ${state.year === year ? "selected" : ""}>${year}</option>`).join("")}</select></label>
+      </div>
       <div class="news-grid" id="news-grid">${shown.map(newsCard).join("")}</div>
       ${shown.length === 0 ? `<p class="voice-empty">${state.lang === "lv" ? "Šajā gadā nav ierakstu." : "No articles for this year."}</p>` : ""}
       ${state.visiblePosts < filtered.length ? `<button class="button load-more" type="button">${c.loadMore}</button>` : ""}
@@ -501,6 +504,11 @@ function bind() {
     state.visiblePosts = 12;
     render(true);
   }));
+  document.querySelector("#year-filter")?.addEventListener("change", (event) => {
+    state.year = event.target.value || "";
+    state.visiblePosts = 12;
+    render(true);
+  });
   const voiceSearch = document.querySelector("#voice-search");
   const voiceCollection = document.querySelector("#voice-collection");
   const filterVoices = () => {

@@ -454,7 +454,17 @@ button { cursor: pointer; }
 }
 .page-hero p:last-child { max-width: 48em; margin: 22px 0 0; color: #e1e5e7; font-size: 17px; line-height: 1.65; }
 
-.tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px; }
+.year-filter { margin-bottom: 36px; }
+.year-select { display: none; }
+.year-select select {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: #fff;
+  font: 600 15px/1.2 var(--display);
+}
+.tabs { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip {
   padding: 10px 15px;
   border: 1px solid var(--line);
@@ -845,6 +855,8 @@ button { cursor: pointer; }
     align-self: start;
     margin-top: 28px;
   }
+  .year-filter .tabs { display: none; }
+  .year-select { display: block; }
   .voice-song summary {
     min-width: 0;
     gap: 12px;
