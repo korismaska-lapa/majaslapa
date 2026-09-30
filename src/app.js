@@ -367,6 +367,16 @@ function contact() {
   </main>`;
 }
 
+function applyContent(content) {
+  if (!content?.site?.copy) return false;
+  site = content.site;
+  copy = site.copy;
+  if (!Array.isArray(site.carousel)) site.carousel = defaultCarousel();
+  if (Array.isArray(content.posts)) posts = content.posts;
+  if (Array.isArray(content.voices)) voiceTracks = content.voices;
+  return true;
+}
+
 async function loadContent() {
   for (const url of ["/content-api.php", "/api/content"]) {
     try {
@@ -374,17 +384,12 @@ async function loadContent() {
       if (!response.ok) continue;
       const text = await response.text();
       if (!text.startsWith("{") && !text.startsWith("[")) continue;
-      const content = JSON.parse(text);
-      site = content.site;
-      copy = site.copy;
-      if (!Array.isArray(site.carousel)) site.carousel = defaultCarousel();
-      posts = content.posts;
-      voiceTracks = content.voices || voiceTracks;
-      return;
+      if (applyContent(JSON.parse(text))) return true;
     } catch {
       // Try the PHP copy of the same JSON if Node/Passenger is down.
     }
   }
+  return false;
 }
 
 async function refreshAdmin(reloadContent = true) {
@@ -573,15 +578,21 @@ function bind() {
   }));
 }
 
-window.addEventListener("popstate", () => render());
+let ready = false;
+window.addEventListener("popstate", () => {
+  if (ready) render();
+});
 async function bootstrap() {
-  render();
   await loadContent();
-  try {
-    const session = await request("/api/session");
-    state.adminAuthenticated = Boolean(session?.authenticated);
-  } catch {}
-  if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
-  render(true);
+  const current = route();
+  if (current === "login" || current === "admin") {
+    try {
+      const session = await request("/api/session");
+      state.adminAuthenticated = Boolean(session?.authenticated);
+    } catch {}
+    if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
+  }
+  ready = true;
+  render();
 }
 bootstrap();
