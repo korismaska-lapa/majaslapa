@@ -254,7 +254,7 @@ fi
     echo "PHP_ADMIN: Node 16+ is still missing; login and content use PHP until Setup Node.js App is switched to Node 20."
   fi
   echo "Passenger: $(grep PassengerNodejs "$HTACCESS" 2>/dev/null || echo missing)"
-} > "$DEPLOYPATH/deploy-check.txt"
+} > "$DEPLOYPATH/tmp/deploy-check.txt"
 
 if [ -n "$NODE" ] && [ -f "$HTACCESS" ]; then
   echo "Pointing Passenger at $NODE"

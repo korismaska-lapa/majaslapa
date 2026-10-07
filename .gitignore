@@ -8,6 +8,7 @@ public/media/voices/
 public/media/uploads/
 data/
 tmp/
+deploy-check.txt
 .htaccess
 *.log
 .DS_Store
