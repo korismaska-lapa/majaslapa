@@ -264,7 +264,13 @@ if [ -n "$NPM" ]; then
   echo "Using $($NODE -v) / npm $($NPM -v)"
   PATH="$(dirname "$NPM"):$PATH"
   export PATH
-  $NPM install --omit=dev --no-audit --no-fund --no-progress
+  $NPM install --include=dev --no-audit --no-fund --no-progress
+  echo "Building frontend from src/"
+  $NPM run build
+  cp "$DEPLOYPATH/dist/app.html" "$DEPLOYPATH/index.html"
+  mkdir -p "$DEPLOYPATH/assets"
+  cp -r "$DEPLOYPATH/dist/assets/." "$DEPLOYPATH/assets/"
+  $NPM prune --omit=dev --no-audit --no-fund --no-progress
 else
   echo "Node 16+ was not found for npm install. Admin and mail still work through PHP."
 fi

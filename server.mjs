@@ -526,10 +526,15 @@ app.use((request, response, next) => {
   }
   next();
 });
+const distRoot = join(root, "dist");
+const webRoot = production && existsSync(distRoot) ? distRoot : root;
+const assetRoot = existsSync(join(webRoot, "assets")) ? join(webRoot, "assets") : join(root, "assets");
+
 app.use("/media", express.static(join(root, "public", "media")));
 app.use("/media", express.static(join(root, "media")));
-app.use("/assets", express.static(join(root, "assets")));
+app.use("/assets", express.static(assetRoot));
 app.use(express.static(join(root, "public")));
+if (webRoot !== root) app.use(express.static(webRoot));
 
 if (!production) {
   try {
@@ -547,7 +552,7 @@ app.use("/api", (request, response) => {
 
 app.use((request, response, next) => {
   if (request.method !== "GET" || request.path.startsWith("/api") || request.path.endsWith(".php")) return next();
-  const index = join(root, "index.html");
+  const index = existsSync(join(webRoot, "index.html")) ? join(webRoot, "index.html") : join(root, "index.html");
   if (!existsSync(index)) return next();
   response.set("Cache-Control", "no-store, no-cache, must-revalidate");
   response.sendFile(index, (error) => {

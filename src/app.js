@@ -583,7 +583,12 @@ window.addEventListener("popstate", () => {
   if (ready) render();
 });
 async function bootstrap() {
-  await loadContent();
+  if (window.__MASKA_BOOT__) {
+    applyContent(window.__MASKA_BOOT__);
+    delete window.__MASKA_BOOT__;
+  } else {
+    await loadContent();
+  }
   const current = route();
   if (current === "login" || current === "admin") {
     try {

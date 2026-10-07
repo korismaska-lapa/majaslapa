@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "build": "vite build",
+    "build:static": "vite build && node scripts/sync-static-assets.mjs",
     "start": "node server.mjs --production",
     "preview": "node server.mjs",
     "import:wxr": "node scripts/import-wxr.mjs",
