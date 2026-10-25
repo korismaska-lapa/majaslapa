@@ -7,7 +7,7 @@
           "about"
         ],
         [
-          "Koncerti",
+          "Jaunumi un Koncerti",
           "concerts"
         ],
         [
@@ -26,7 +26,7 @@
       "heroEyebrow": "Mārupes novada Babītes Kultūrizglītības centrs",
       "heroTitle": "Jauktais koris MASKA",
       "heroLead": "Dibināts 2000. gadā. Diriģents un mākslinieciskais vadītājs Jānis Ozols. Kormūzika, kurā klasika sadzīvo ar rokmūziku, tautasdziesmu un jaundarbiem.",
-      "listen": "Klausies kori",
+      "listen": "Mūsu darbi",
       "join": "Pievienojies korim",
       "aboutTitle": "Par kori",
       "aboutLead": "Babītes novada jauktais koris “MASKA” ir viens no labākajiem Latvijas amatieru koriem.",
@@ -37,7 +37,7 @@
       "founded": "Dibināšanas gads",
       "albums": "Mūzikas albumi",
       "years": "Gadi kopā",
-      "concertsNews": "Koncerti un jaunumi",
+      "concertsNews": "Jaunumi un koncerti",
       "allNews": "Viss jaunumu arhīvs",
       "news": "Jaunumi",
       "latestTitle": "MASKAS balsis izskan “Béla Bartók International Choir Competition 2026” Ungārijā",
@@ -100,7 +100,9 @@
       "voice": "Balss grupa (ja zināma)",
       "message": "Īsi par savu muzikālo pieredzi",
       "send": "Sagatavot e-pastu",
-      "privacy": "Nospiežot pogu, tiks atvērta tava e-pasta programma. Vietne pieteikuma datus neuzglabā.",
+      "privacy": "Ziņa tiks nosūtīta uz kora e-pastu. Vietne šos datus neuzglabā.",
+      "formSent": "Paldies, ziņa ir nosūtīta.",
+      "formError": "Ziņu neizdevās nosūtīt. Mēģini vēlreiz vai raksti uz korismaska@gmail.com.",
       "contactPageLead": "Jautājumiem par koncertiem, sadarbību, pievienošanos korim un preses materiāliem.",
       "general": "Vispārīgi jautājumi",
       "social": "Sociālie tīkli",
@@ -109,7 +111,7 @@
       "writeUs": "Raksti mums",
       "subject": "Tēma",
       "question": "Ziņa",
-      "sendMessage": "Sagatavot ziņu",
+      "sendMessage": "Sūtīt ziņu",
       "sourceNote": "Saturs migrēts no korismaska.lv WordPress eksporta.",
       "collaborationText": "Koris veidojis projektus ar Rihardu Zaļupi, Jāni Šipkēvicu, Vestardu Šimku, Renāti Stivriņu, Lauru Jēkabsoni, grupu Pērkons un daudziem citiem Latvijas mūziķiem. Īpaši MASKAI skaņdarbus radījuši Vytautas Miškinis, Pärt Uusberg un Laura Jēkabsone."
     },
@@ -120,7 +122,7 @@
           "about"
         ],
         [
-          "Concerts",
+          "News and Concerts",
           "concerts"
         ],
         [
@@ -139,7 +141,7 @@
       "heroEyebrow": "Babīte Culture and Education Centre, Mārupe municipality",
       "heroTitle": "Mixed choir MASKA",
       "heroLead": "Founded in 2000. Conductor and artistic director Jānis Ozols. Choral music where classical repertoire meets rock, folk song and new commissions.",
-      "listen": "Listen to the choir",
+      "listen": "Our music",
       "join": "Join the choir",
       "aboutTitle": "About MASKA",
       "aboutLead": "Mixed choir “MASKA” is one of the leading amateur choirs in Latvia.",
@@ -150,7 +152,7 @@
       "founded": "Year founded",
       "albums": "Albums released",
       "years": "Years together",
-      "concertsNews": "Concerts and news",
+      "concertsNews": "News and concerts",
       "allNews": "Full news archive",
       "news": "News",
       "latestTitle": "MASKA at the Béla Bartók International Choir Competition 2026 in Hungary",
@@ -213,7 +215,9 @@
       "voice": "Voice part (if known)",
       "message": "A little about your musical experience",
       "send": "Prepare email",
-      "privacy": "This opens your email application. The website does not store your application data.",
+      "privacy": "Your message is emailed to the choir. The website does not store this data.",
+      "formSent": "Thank you, your message has been sent.",
+      "formError": "The message could not be sent. Please try again or email korismaska@gmail.com.",
       "contactPageLead": "For concerts, collaborations, joining the choir and press materials.",
       "general": "General enquiries",
       "social": "Social media",
@@ -251,6 +255,24 @@
     "contactHero": "/media/IMG_2232.jpg",
     "conductorPortrait": "/media/JanisOzols.jpg"
   },
+  "people": [
+    {
+      "name": "Jānis Ozols",
+      "photo": "/media/JanisOzols.jpg",
+      "occupation": {
+        "lv": "Diriģents",
+        "en": "Conductor"
+      },
+      "label": {
+        "lv": "Diriģents un mākslinieciskais vadītājs",
+        "en": "Conductor and artistic director"
+      },
+      "text": {
+        "lv": "Jānis Ozols ir kora MASKA izveidotājs, diriģents un mākslinieciskais vadītājs kopš tā dibināšanas 2000. gadā. Viņa vadībā koris izaudzis par vienu no spilgtākajiem Latvijas amatieru koriem.\n\nJānis Ozols absolvējis Jāzepa Vītola Latvijas Mūzikas akadēmiju un par savu darbu saņēmis vairākas labākā diriģenta balvas starptautiskos konkursos.\n\nKora repertuārs aptver plašu mūzikas žanru loku — no garīgās līdz tautas mūzikai, no klasiskās līdz mūsdienu mūzikai, vienmēr meklējot jaunas interpretāciju iespējas.\n\nKoris sadarbojas ar Latvijā un pasaulē atzītiem mūziķiem — Rihardu Zaļupi, Renāti Stivriņu, Jāni Šipkēvicu, Vestardu Šimku un daudziem citiem.",
+        "en": "Jānis Ozols founded MASKA and has been its conductor and artistic director since 2000. Under his leadership, it has grown into one of Latvia’s most distinctive amateur choirs.\n\nA graduate of the Jāzeps Vītols Latvian Academy of Music, Jānis has received several best conductor awards at international competitions.\n\nThe repertoire spans a wide range of genres, from sacred to folk music and from classical to contemporary, always looking for new ways to interpret and enrich a performance.\n\nThe choir works with internationally recognised Latvian musicians, including Rihards Zaļupis, Renāte Stivriņa, Jānis Šipkēvics and Vestards Šimkus."
+      }
+    }
+  ],
   "achievements": {
     "lv": [
       {
@@ -421,6 +443,24 @@
     {
       "value": "26",
       "labelKey": "years"
+    }
+  ],
+  "carousel": [
+    {
+      "image": "/media/slide1.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide2.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide3.jpg",
+      "alt": { "lv": "", "en": "" }
+    },
+    {
+      "image": "/media/slide4.jpg",
+      "alt": { "lv": "", "en": "" }
     }
   ],
   "voices": {

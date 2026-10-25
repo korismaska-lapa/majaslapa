@@ -2,7 +2,7 @@ import "./styles.css";
 import { posts as builtInPosts } from "./posts.js";
 import defaultSite from "../content/site.json";
 import defaultVoiceTracks from "../content/voices.json";
-import { adminView, bindAdmin, bindLogin, loginView } from "./admin.js";
+import { adminView, bindAdmin, bindLogin, loginView, request } from "./admin.js";
 
 const app = document.querySelector("#app");
 const state = {
@@ -33,13 +33,23 @@ const href = (name = "") => `${state.lang === "en" ? "/en" : ""}${name && name !
 const postHref = (post) => href(`news/${encodeURIComponent(post.slug)}`);
 const t = () => copy[state.lang];
 const escapeHtml = (value = "") => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-const FALLBACK_POST_IMAGE = "/media/maska-logo.png";
-const postImage = (post) => String(post?.image || "").trim() || FALLBACK_POST_IMAGE;
-const postImg = (post) => {
-  const src = postImage(post);
-  const fallbackClass = src === FALLBACK_POST_IMAGE ? " logo-fallback" : "";
-  return `<img src="${escapeHtml(src)}" alt="" loading="lazy" class="${fallbackClass.trim()}" onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}';this.classList.add('logo-fallback')">`;
+const FALLBACK_POST_IMAGE = "/media/maska-placeholder.jpg";
+const defaultCarousel = () => [1, 2, 3, 4].map((n) => ({ image: `/media/slide${n}.jpg`, alt: { lv: "", en: "" } }));
+const carouselSlides = () => {
+  const items = Array.isArray(site.carousel) ? site.carousel : defaultCarousel();
+  return items.map((item) => ({
+    image: String(item?.image || "").trim(),
+    alt: item?.alt?.[state.lang] || item?.alt?.lv || ""
+  })).filter((item) => item.image);
 };
+const mediaSrc = (src) => String(src || "").trim() || FALLBACK_POST_IMAGE;
+const mediaImg = (src, alt = "", className = "") => {
+  const path = mediaSrc(src);
+  const fallback = path === FALLBACK_POST_IMAGE ? " logo-fallback" : "";
+  return `<img src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="lazy" class="${escapeHtml(`${className}${fallback}`.trim())}" onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}';this.classList.add('logo-fallback')">`;
+};
+const postImage = (post) => mediaSrc(post?.image);
+const postImg = (post) => mediaImg(postImage(post));
 const youtubeUrlRe = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})[^\s]*/gi;
 const youtubeEmbed = (id) => `<div class="article-embed video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
 function renderArticleParagraph(paragraph, index) {
@@ -88,10 +98,15 @@ function footer() {
     </footer>`;
 }
 
-const pageHero = (eyebrow, title, lead, image, extraClass = "") => `
-  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}" style="--hero-image:url('${image}')">
+const pageHero = (eyebrow, title, lead, image, extraClass = "") => {
+  const src = mediaSrc(image);
+  const article = extraClass.includes("article-hero");
+  return `
+  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}"${article ? "" : ` style="--hero-image:url('${escapeHtml(src).replace(/'/g, "%27")}')"`}>
+    ${article ? mediaImg(src, "", "page-hero-photo") : ""}
     <div class="page-hero-inner"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lead ? `<p>${lead}</p>` : ""}</div>
   </section>`;
+};
 
 function joinBand() {
   const c = t();
@@ -107,14 +122,31 @@ function joinBand() {
   </section>`;
 }
 
-function homeNewsSideCard(post) {
-  const title = escapeHtml(post.title[state.lang] || post.title.lv);
-  const excerpt = escapeHtml(post.excerpt[state.lang] || post.excerpt.lv);
-  return `<a class="programme" href="${postHref(post)}" data-route>
-    <span class="tag">${formatDate(post.date)}</span>
-    <h3>${title} <span aria-hidden="true">→</span></h3>
-    ${excerpt ? `<p>${excerpt}</p>` : ""}
+function programmeCard(item) {
+  const post = posts.find((candidate) => candidate.slug === item.postSlug);
+  const destination = post ? postHref(post) : href("concerts");
+  return `<a class="programme" href="${destination}" data-route>
+    <span class="tag">${escapeHtml(item.tag)}</span>
+    <h3>${escapeHtml(item.title)} <span aria-hidden="true">→</span></h3>
+    <p>${escapeHtml(item.text)}</p>
   </a>`;
+}
+
+function homeCarousel() {
+  const slides = carouselSlides();
+  if (!slides.length) return "";
+  const previous = state.lang === "lv" ? "Iepriekšējais attēls" : "Previous image";
+  const next = state.lang === "lv" ? "Nākamais attēls" : "Next image";
+  return `<div class="home-carousel" data-carousel>
+    <div class="home-carousel-viewport">
+      ${slides.map((slide, index) => `<img src="${escapeHtml(slide.image)}" alt="${escapeHtml(slide.alt)}" class="home-carousel-slide${index === 0 ? " is-active" : ""}"${index === 0 ? "" : " loading=\"lazy\""} onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}'">`).join("")}
+      ${slides.length > 1 ? `
+        <button class="home-carousel-nav prev" type="button" data-carousel-prev aria-label="${previous}"></button>
+        <button class="home-carousel-nav next" type="button" data-carousel-next aria-label="${next}"></button>
+        <div class="home-carousel-dots">${slides.map((_, index) => `<button type="button" class="${index === 0 ? "is-active" : ""}" data-carousel-dot="${index}" aria-label="${index + 1}"></button>`).join("")}</div>
+      ` : ""}
+    </div>
+  </div>`;
 }
 
 function home() {
@@ -123,21 +155,22 @@ function home() {
     <main id="main">
       <section class="hero" style="--home-hero:url('${site.media.homeHero}')">
         <div class="hero-content"><p class="eyebrow">${c.heroEyebrow}</p><h1>${c.heroTitle}</h1><p class="lead">${c.heroLead}</p>
-          <div class="button-row"><a class="button" href="${href("music")}" data-route>${c.listen}</a><a class="button secondary" href="${href("join")}" data-route>${c.join}</a></div>
+          <div class="button-row"><a class="button" href="${href("join")}" data-route>${c.join}</a><a class="button secondary" href="${href("music")}" data-route>${c.listen}</a></div>
         </div>
       </section>
       <section class="section home-about">
-        <div><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
-        <div class="stat-list">${site.stats.map((stat) => `<div class="stat"><span>${escapeHtml(c[stat.labelKey] || stat.labelKey)}</span><strong>${escapeHtml(stat.value)}</strong></div>`).join("")}</div>
+        <div class="home-about-head"><h2 class="section-title">${c.aboutTitle}</h2><div class="rule"></div></div>
+        <div class="home-about-copy"><p class="prose-lead">${c.aboutLead}</p><div class="prose"><p>${c.about1}</p><p>${c.about2}</p><p>${c.about3}</p></div><a class="text-link" href="${href("about")}" data-route>${c.aboutMore}</a></div>
+        ${homeCarousel()}
       </section>
-      <section class="section surface">
-        <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link" href="${href("concerts")}" data-route>${c.allNews}</a></div>
+      <section class="section surface home-news">
+        <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link home-news-archive" href="${href("concerts")}" data-route>${c.allNews}</a></div>
         <div class="feature-grid">
           ${posts[0] ? `<a class="feature-card" href="${postHref(posts[0])}" data-route>${postImg(posts[0])}<div class="card-body"><span class="tag">${c.news} · ${formatDate(posts[0].date)}</span><h3>${escapeHtml(posts[0].title[state.lang] || posts[0].title.lv)}</h3><p>${escapeHtml(posts[0].excerpt[state.lang] || posts[0].excerpt.lv)}</p></div></a>` : ""}
-          <div class="programme-list">${posts.slice(1, 4).map(homeNewsSideCard).join("")}</div>
+          <div class="programme-list">${site.programmes[state.lang].map(programmeCard).join("")}</div>
         </div>
       </section>
-      <section class="section"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
+      <section class="section home-music"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
         <div class="music-cards">
           <a class="music-card" href="${href("music")}#albums" data-route><span class="tag">Spotify</span><h3>${c.recordings}</h3><p>${c.recordingsNote}</p><span class="arrow">→</span></a>
           <a class="music-card" href="${href("music")}#video" data-route><span class="tag">YouTube</span><h3>${c.video}</h3><p>${c.videoNote}</p><span class="arrow">→</span></a>
@@ -148,14 +181,31 @@ function home() {
     </main>`;
 }
 
+function personCard(person, index) {
+  const occupation = person.occupation?.[state.lang] || person.occupation?.lv || "";
+  const label = person.label?.[state.lang] || person.label?.lv || "";
+  const text = person.text?.[state.lang] || person.text?.lv || "";
+  const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+  return `<section class="section story-grid ${index % 2 === 1 ? "flip" : ""}">
+    <div class="portrait-wrap">${mediaImg(person.photo, person.name, "portrait")}</div>
+    <div class="leader-card">
+      ${occupation ? `<p class="eyebrow">${escapeHtml(occupation)}</p>` : ""}
+      <h2>${escapeHtml(person.name)}</h2>
+      ${label ? `<p class="role">${escapeHtml(label)}</p>` : ""}
+      ${paragraphs.length ? `<div class="prose">${paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>` : ""}
+    </div>
+  </section>`;
+}
+
 function about() {
   const c = t();
   const achievements = site.achievements[state.lang];
+  const people = site.people || [];
   return `<main id="main">
     ${pageHero(c.heroEyebrow, c.aboutTitle, c.aboutPageLead, site.media.aboutHero)}
-    <section class="section story-grid"><div><img class="portrait" src="${site.media.conductorPortrait}" alt="${site.details.conductor}"></div><div class="leader-card"><p class="eyebrow">${c.conductor}</p><h2>${site.details.conductor}</h2><p class="role">${c.conductorRole}</p><div class="prose"><p>${c.conductorText1}</p><p>${c.conductorText2}</p><p>${c.about2}</p><p>${c.about3}</p></div></div></section>
+    ${people.map((person, index) => personCard(person, index)).join("")}
     <section class="section surface"><h2 class="section-title">${c.achievements}</h2><div class="rule"></div><div class="achievement-grid">${achievements.map(({ year, title, text }) => `<article class="achievement"><span class="year">${escapeHtml(year)}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div></section>
-    <section class="section"><div class="section-head"><div><h2 class="section-title">${c.collaboration}</h2><div class="rule"></div></div></div><div class="prose"><p>${c.collaborationText}</p></div></section>
+    <section class="section about-collaboration"><div class="section-head"><div><h2 class="section-title">${c.collaboration}</h2><div class="rule"></div></div></div><div class="prose"><p>${c.collaborationText}</p></div></section>
     ${joinBand()}
   </main>`;
 }
@@ -164,13 +214,16 @@ const formatDate = (date) => new Intl.DateTimeFormat(state.lang === "lv" ? "lv-L
 
 function concerts() {
   const c = t();
-  const years = [...new Set(posts.map((post) => post.date.slice(0, 4)))];
+  const years = [...new Set(posts.map((post) => post.date.slice(0, 4)))].sort((a, b) => b.localeCompare(a));
   const filtered = state.year ? posts.filter((post) => post.date.startsWith(state.year)) : posts;
   const shown = filtered.slice(0, state.visiblePosts);
   return `<main id="main">
     ${pageHero(c.news, c.concertsNews, c.concertsLead, site.media.concertsHero)}
     <section class="section surface">
-      <div class="tabs"><button class="chip ${state.year === "" ? "active" : ""}" type="button" data-year="">${c.allYears}</button>${years.map((year) => `<button class="chip ${state.year === year ? "active" : ""}" type="button" data-year="${year}">${year}</button>`).join("")}</div>
+      <div class="year-filter">
+        <div class="tabs"><button class="chip ${state.year === "" ? "active" : ""}" type="button" data-year="">${c.allYears}</button>${years.map((year) => `<button class="chip ${state.year === year ? "active" : ""}" type="button" data-year="${year}">${year}</button>`).join("")}</div>
+        <label class="year-select"><select id="year-filter" aria-label="${escapeHtml(c.allYears)}"><option value="">${state.lang === "lv" ? "Visi" : "All"}</option>${years.map((year) => `<option value="${year}" ${state.year === year ? "selected" : ""}>${year}</option>`).join("")}</select></label>
+      </div>
       <div class="news-grid" id="news-grid">${shown.map(newsCard).join("")}</div>
       ${shown.length === 0 ? `<p class="voice-empty">${state.lang === "lv" ? "Šajā gadā nav ierakstu." : "No articles for this year."}</p>` : ""}
       ${state.visiblePosts < filtered.length ? `<button class="button load-more" type="button">${c.loadMore}</button>` : ""}
@@ -188,7 +241,7 @@ function article() {
   const c = t();
   const post = posts.find((item) => item.slug === articleSlug());
   if (!post) {
-    return `<main id="main">${pageHero(c.news, "404", state.lang === "lv" ? "Šāds jaunums nav atrasts." : "This article could not be found.", "/media/MASKA_small_vertical.jpg")}<section class="section"><a class="button" href="${href("concerts")}" data-route>${c.allNews}</a></section></main>`;
+    return `<main id="main">${pageHero(c.news, "404", state.lang === "lv" ? "Šāds jaunums nav atrasts." : "This article could not be found.", FALLBACK_POST_IMAGE)}<section class="section"><a class="button" href="${href("concerts")}" data-route>${c.allNews}</a></section></main>`;
   }
 
   const title = escapeHtml(post.title[state.lang] || post.title.lv);
@@ -242,7 +295,7 @@ function music() {
   const videos = site.videos;
   return `<main id="main">
     ${pageHero(c.musicTitle, c.recordings, c.musicPageLead, site.media.musicHero)}
-    <section class="section" id="albums"><h2 class="section-title">${c.albumsTitle}</h2><div class="rule"></div><div class="album-grid">${albums.map((album) => `<article class="album"><img src="${album.image}" alt="${escapeHtml(album.title)}" loading="lazy"><div class="album-content"><span class="tag">${escapeHtml(album.year)}</span><h2>${escapeHtml(album.title)}</h2><p>${escapeHtml(album.description?.[state.lang] || album.description?.lv || c[album.descriptionKey] || "")}</p><a href="${album.url}" target="_blank" rel="noreferrer">${c.listenSpotify} →</a></div></article>`).join("")}</div></section>
+    <section class="section" id="albums"><h2 class="section-title">${c.albumsTitle}</h2><div class="rule"></div><div class="album-grid">${albums.map((album) => `<article class="album">${mediaImg(album.image, album.title)}<div class="album-content"><span class="tag">${escapeHtml(album.year)}</span><h2>${escapeHtml(album.title)}</h2><p>${escapeHtml(album.description?.[state.lang] || album.description?.lv || c[album.descriptionKey] || "")}</p><a href="${album.url}" target="_blank" rel="noreferrer">${c.listenSpotify} →</a></div></article>`).join("")}</div></section>
     <section class="section surface" id="video"><h2 class="section-title">${c.videoTitle}</h2><div class="rule"></div><div class="video-grid">${videos.map((video) => `<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="${escapeHtml(video.title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><h3>${escapeHtml(video.title)}</h3></article>`).join("")}</div></section>
     <section class="section" id="voices"><h2 class="section-title">${c.singersTitle}</h2><div class="rule"></div><p class="prose">${c.singerArchive}</p>${voiceArchive()}</section>
   </main>`;
@@ -254,10 +307,39 @@ function join() {
   return `<main id="main">
     ${pageHero(c.joinEyebrow, c.joinTitle, c.joinPageLead, site.media.joinHero)}
     <section class="section contact-grid">
-      <div><h2 class="section-title">${c.whatToExpect}</h2><div class="rule"></div><div class="contact-list"><div class="contact-item"><span>01</span><strong>${c.expectation1}</strong></div><div class="contact-item"><span>02</span><strong>${c.expectation2}</strong></div><div class="contact-item"><span>03</span><strong>${c.expectation3}</strong></div></div></div>
-      <div><h2 class="section-title">${c.formTitle}</h2><div class="rule"></div>${applicationForm(c)}</div>
+      <div>
+        <h2 class="section-title">${c.whatToExpect}</h2>
+        <div class="rule"></div>
+        <div class="join-card">
+          <div class="join-expect">
+            <div class="contact-item"><span>01</span><strong>${c.expectation1}</strong></div>
+            <div class="contact-item"><span>02</span><strong>${c.expectation2}</strong></div>
+            <div class="contact-item"><span>03</span><strong>${c.expectation3}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="section-title">${c.formTitle}</h2>
+        <div class="rule"></div>
+        <div class="join-card">${applicationForm(c)}</div>
+      </div>
     </section>
-    <section class="section surface contact-grid"><a class="map-link" href="${d.mapUrl}" target="_blank" rel="noreferrer"><h3>${c.venue}</h3><p>${d.address}</p><span class="text-link" style="color:white">${c.openMap} →</span></a><div><dl class="facts" style="background:var(--ink);padding:28px"><div class="fact"><dt>${c.rehearsals}</dt><dd>${c.rehearsalValue}</dd></div><div class="fact"><dt>${c.gettingThere}</dt><dd>${c.travelValue}</dd></div><div class="fact"><dt>${c.president}</dt><dd>${d.president} · ${d.presidentEmail} · ${d.phone}</dd></div></dl></div></section>
+    <section class="section join-place">
+      <a class="join-place-card map-link" href="${d.mapUrl}" target="_blank" rel="noreferrer">
+        <div>
+          <h3>${c.venue}</h3>
+          <p>${d.address}</p>
+        </div>
+        <span class="text-link">${c.openMap} →</span>
+      </a>
+      <div class="join-place-card">
+        <dl class="facts">
+          <div class="fact"><dt>${c.rehearsals}</dt><dd>${c.rehearsalValue}</dd></div>
+          <div class="fact"><dt>${c.gettingThere}</dt><dd>${c.travelValue}</dd></div>
+          <div class="fact"><dt>${c.president}</dt><dd>${d.president} · ${d.presidentEmail} · ${d.phone}</dd></div>
+        </dl>
+      </div>
+    </section>
   </main>`;
 }
 
@@ -266,8 +348,9 @@ function applicationForm(c) {
     <div class="field"><label for="name">${c.name}</label><input id="name" name="name" required autocomplete="name"></div>
     <div class="field"><label for="email">${c.email}</label><input id="email" name="email" type="email" required autocomplete="email"></div>
     <div class="field"><label for="phone">${c.phone}</label><input id="phone" name="phone" autocomplete="tel"></div>
-    <div class="field"><label for="voice">${c.voice}</label><select id="voice" name="voice"><option value="">—</option>${site.voiceOptions.map((option) => `<option>${escapeHtml(option)}</option>`).join("")}</select></div>
+    <div class="field"><label for="voice">${c.voice}</label><select id="voice" name="voice"><option value="">—</option>${site.voiceOptions.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("")}</select></div>
     <div class="field"><label for="message">${c.message}</label><textarea id="message" name="message" required></textarea></div>
+    <div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
     <button class="button" type="submit">${c.send}</button><p class="form-note">${c.privacy}</p>
   </form>`;
 }
@@ -279,23 +362,34 @@ function contact() {
     ${pageHero(c.contactEyebrow, c.contact, c.contactPageLead, site.media.contactHero)}
     <section class="section contact-grid">
       <div><h2 class="section-title">${c.contact}</h2><div class="rule"></div><div class="contact-list"><div class="contact-item"><span>${c.general}</span><a href="mailto:${d.generalEmail}">${d.generalEmail}</a></div><div class="contact-item"><span>${c.president}</span><strong>${d.president}</strong><br><a href="mailto:${d.presidentEmail}">${d.presidentEmail}</a> · <a href="tel:${d.phoneHref}">${d.phone}</a></div><div class="contact-item"><span>${c.social}</span><a href="${d.facebook}" target="_blank">Facebook — Koris MASKA</a><br><a href="${d.instagram}" target="_blank">Instagram — @korismaska</a></div><div class="contact-item"><span>${c.location}</span><a href="${d.mapUrl}" target="_blank">${d.address}</a></div></div></div>
-      <div><h2 class="section-title">${c.writeUs}</h2><div class="rule"></div><form class="form mail-form" data-kind="contact"><div class="field"><label for="contact-name">${c.name}</label><input id="contact-name" name="name" required autocomplete="name"></div><div class="field"><label for="contact-email">${c.email}</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="subject">${c.subject}</label><input id="subject" name="subject" required></div><div class="field"><label for="contact-message">${c.question}</label><textarea id="contact-message" name="message" required></textarea></div><button class="button" type="submit">${c.sendMessage}</button><p class="form-note">${c.privacy}</p></form></div>
+      <div><h2 class="section-title">${c.writeUs}</h2><div class="rule"></div><form class="form mail-form" data-kind="contact"><div class="field"><label for="contact-name">${c.name}</label><input id="contact-name" name="name" required autocomplete="name"></div><div class="field"><label for="contact-email">${c.email}</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="subject">${c.subject}</label><input id="subject" name="subject" required></div><div class="field"><label for="contact-message">${c.question}</label><textarea id="contact-message" name="message" required></textarea></div><div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit">${c.sendMessage}</button><p class="form-note">${c.privacy}</p></form></div>
     </section>
   </main>`;
 }
 
+function applyContent(content) {
+  if (!content?.site?.copy) return false;
+  site = content.site;
+  copy = site.copy;
+  if (!Array.isArray(site.carousel)) site.carousel = defaultCarousel();
+  if (Array.isArray(content.posts)) posts = content.posts;
+  if (Array.isArray(content.voices)) voiceTracks = content.voices;
+  return true;
+}
+
 async function loadContent() {
-  try {
-    const response = await fetch("/api/content", { cache: "no-store" });
-    if (!response.ok) return;
-    const content = await response.json();
-    site = content.site;
-    copy = site.copy;
-    posts = content.posts;
-    voiceTracks = content.voices || voiceTracks;
-  } catch {
-    // The bundled content remains available for static previews.
+  for (const url of ["/content-api.php", "/api/content"]) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) continue;
+      const text = await response.text();
+      if (!text.startsWith("{") && !text.startsWith("[")) continue;
+      if (applyContent(JSON.parse(text))) return true;
+    } catch {
+      // Try the PHP copy of the same JSON if Node/Passenger is down.
+    }
   }
+  return false;
 }
 
 async function refreshAdmin(reloadContent = true) {
@@ -338,6 +432,47 @@ function navigate(url) {
   render();
 }
 
+let carouselTimer = null;
+function bindCarousel() {
+  if (carouselTimer) {
+    clearInterval(carouselTimer);
+    carouselTimer = null;
+  }
+  const root = document.querySelector("[data-carousel]");
+  const slides = [...(root?.querySelectorAll(".home-carousel-slide") || [])];
+  if (!root || slides.length < 2) return;
+  const dots = [...root.querySelectorAll("[data-carousel-dot]")];
+  let index = Math.max(0, slides.findIndex((slide) => slide.classList.contains("is-active")));
+  const go = (next) => {
+    slides[index].classList.remove("is-active");
+    dots[index]?.classList.remove("is-active");
+    index = (next + slides.length) % slides.length;
+    slides[index].classList.add("is-active");
+    dots[index]?.classList.add("is-active");
+  };
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const start = () => {
+    if (reduceMotion) return;
+    clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => go(index + 1), 5000);
+  };
+  root.querySelector("[data-carousel-prev]")?.addEventListener("click", () => {
+    go(index - 1);
+    start();
+  });
+  root.querySelector("[data-carousel-next]")?.addEventListener("click", () => {
+    go(index + 1);
+    start();
+  });
+  dots.forEach((dot) => dot.addEventListener("click", () => {
+    go(Number(dot.dataset.carouselDot));
+    start();
+  }));
+  root.addEventListener("mouseenter", () => clearInterval(carouselTimer));
+  root.addEventListener("mouseleave", start);
+  start();
+}
+
 function bind() {
   document.querySelectorAll("[data-route]").forEach((link) => link.addEventListener("click", (event) => {
     const url = new URL(link.href, location.origin);
@@ -353,6 +488,7 @@ function bind() {
     if (state.adminAuthenticated) bindAdmin({ content: site, posts, refresh: refreshAdmin, navigate });
     return;
   }
+  bindCarousel();
   document.querySelector(".menu-toggle")?.addEventListener("click", () => {
     state.menu = !state.menu;
     document.body.classList.toggle("menu-open", state.menu);
@@ -375,6 +511,11 @@ function bind() {
     state.visiblePosts = 12;
     render(true);
   }));
+  document.querySelector("#year-filter")?.addEventListener("change", (event) => {
+    state.year = event.target.value || "";
+    state.visiblePosts = 12;
+    render(true);
+  });
   const voiceSearch = document.querySelector("#voice-search");
   const voiceCollection = document.querySelector("#voice-collection");
   const filterVoices = () => {
@@ -391,25 +532,72 @@ function bind() {
   };
   voiceSearch?.addEventListener("input", filterVoices);
   voiceCollection?.addEventListener("change", filterVoices);
-  document.querySelectorAll(".mail-form").forEach((form) => form.addEventListener("submit", (event) => {
+  document.querySelectorAll(".mail-form").forEach((form) => form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const note = form.querySelector(".form-note");
+    const button = form.querySelector("button[type=submit]");
     const values = Object.fromEntries(new FormData(form));
-    const subject = form.dataset.kind === "join" ? `Pieteikums korim — ${values.name}` : values.subject;
-    const body = form.dataset.kind === "join"
-      ? `${t().name}: ${values.name}\n${t().email}: ${values.email}\n${t().phone}: ${values.phone}\n${t().voice}: ${values.voice}\n\n${values.message}`
-      : `${t().name}: ${values.name}\n${t().email}: ${values.email}\n\n${values.message}`;
-    location.href = `mailto:${site.details.generalEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    button.disabled = true;
+    note.classList.remove("ok", "error");
+    try {
+      const payloadBody = JSON.stringify({ kind: form.dataset.kind, ...values });
+      const readJson = async (response) => {
+        const text = await response.text();
+        try {
+          return { ok: response.ok, data: JSON.parse(text) };
+        } catch {
+          return { ok: false, data: null };
+        }
+      };
+      let result = await readJson(await fetch("/send-mail.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payloadBody
+      }));
+      if (!result.data) {
+        result = await readJson(await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payloadBody
+        }));
+      }
+      if (!result.ok || !result.data?.sent) {
+        throw new Error(result.data?.error || "send failed");
+      }
+      form.reset();
+      note.textContent = t().formSent;
+      note.classList.add("ok");
+    } catch (error) {
+      note.textContent = error.message && error.message !== "send failed"
+        ? `${t().formError} ${error.message}`
+        : t().formError;
+      note.classList.add("error");
+    } finally {
+      button.disabled = false;
+    }
   }));
 }
 
-window.addEventListener("popstate", () => render());
+let ready = false;
+window.addEventListener("popstate", () => {
+  if (ready) render();
+});
 async function bootstrap() {
-  await loadContent();
-  try {
-    const response = await fetch("/api/session", { cache: "no-store" });
-    if (response.ok) state.adminAuthenticated = Boolean((await response.json()).authenticated);
-  } catch {}
-  if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
+  if (window.__MASKA_BOOT__) {
+    applyContent(window.__MASKA_BOOT__);
+    delete window.__MASKA_BOOT__;
+  } else {
+    await loadContent();
+  }
+  const current = route();
+  if (current === "login" || current === "admin") {
+    try {
+      const session = await request("/api/session");
+      state.adminAuthenticated = Boolean(session?.authenticated);
+    } catch {}
+    if (route() === "admin" && !state.adminAuthenticated) history.replaceState({}, "", "/login");
+  }
+  ready = true;
   render();
 }
 bootstrap();

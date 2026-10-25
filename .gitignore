@@ -3,15 +3,16 @@ dist/
 .env
 .env.*
 !.env.example
+/media/
 public/media/voices/
 public/media/uploads/
+data/
+tmp/
+deploy-check.txt
+.htaccess
 *.log
 .DS_Store
 Thumbs.db
 support.js
-"Koris MASKA - Home.dc.html"
+Koris MASKA - Home.dc.html
 reference/
-
-projekts.zip
-*.zip
-

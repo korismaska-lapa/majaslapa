@@ -1,19 +1,78 @@
 let selectedPostId = null;
-let selectedIndex = { achievements: null, albums: null, videos: null };
+let selectedIndex = { achievements: null, albums: null, videos: null, people: null, carousel: null };
 let activeTab = "site";
 
 const escape = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 })[char]);
 
-const request = async (url, options = {}) => {
-  const response = await fetch(url, {
-    ...options,
-    headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
-  });
-  const result = response.status === 204 ? null : await response.json();
-  if (!response.ok) throw new Error(result?.error || `Request failed (${response.status})`);
+const phpUrl = (url) => {
+  if (url === "/api/content") return "/content-api.php";
+  if (url === "/api/login") return "/admin-api.php?r=login";
+  if (url === "/api/logout") return "/admin-api.php?r=logout";
+  if (url === "/api/session") return "/admin-api.php?r=session";
+  if (url === "/api/admin/site") return "/admin-api.php?r=site";
+  if (url === "/api/admin/upload") return "/admin-api.php?r=upload";
+  if (url === "/api/admin/posts") return "/admin-api.php?r=posts";
+  const post = url.match(/^\/api\/admin\/posts\/([^/?#]+)$/);
+  if (post) return `/admin-api.php?r=posts&id=${encodeURIComponent(post[1])}`;
+  return null;
+};
+
+class ApiError extends Error {
+  constructor(message, { fromJson = false } = {}) {
+    super(message);
+    this.fromJson = fromJson;
+  }
+}
+
+const parseApiResponse = async (response) => {
+  if (response.status === 204) return null;
+  const text = await response.text();
+  const trimmed = text.trim();
+  if (!trimmed) {
+    if (!response.ok) throw new ApiError(`Request failed (${response.status})`);
+    return null;
+  }
+  if (trimmed[0] !== "{" && trimmed[0] !== "[") {
+    throw new ApiError("Serveris neatbild.");
+  }
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch {
+    throw new ApiError("Nederīga servera atbilde.");
+  }
+  if (!response.ok) throw new ApiError(result?.error || `Request failed (${response.status})`, { fromJson: true });
   return result;
+};
+
+export const request = async (url, options = {}) => {
+  const method = String(options.method || "GET").toUpperCase();
+  const init = {
+    ...options,
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: options.body instanceof FormData ? options.headers : { "Content-Type": "application/json", ...options.headers }
+  };
+  const php = phpUrl(url);
+  const attempts = [];
+  if (php) {
+    attempts.push(method === "DELETE"
+      ? { url: `${php}${php.includes("?") ? "&" : "?"}action=delete`, init: { ...init, method: "POST" } }
+      : { url: php, init });
+  }
+  attempts.push({ url, init });
+  let lastError;
+  for (const attempt of attempts) {
+    try {
+      return await parseApiResponse(await fetch(attempt.url, attempt.init));
+    } catch (error) {
+      if (error.fromJson) throw error;
+      lastError = error instanceof ApiError ? error : new ApiError("Serveris neatbild.");
+    }
+  }
+  throw lastError;
 };
 
 const youtubeId = (value = "") => {
@@ -40,7 +99,7 @@ export const loginView = () => `
   </main>`;
 
 const stringFields = (content, language) => Object.entries(content.copy[language])
-  .filter(([, value]) => typeof value === "string")
+  .filter(([key, value]) => typeof value === "string" && !["conductorText1", "conductorText2", "conductorRole"].includes(key))
   .map(([key, value]) => `
     <label class="admin-field">
       <span>${escape(key)}</span>
@@ -61,7 +120,7 @@ const postEditor = (posts) => {
         <label class="admin-field"><span>Datums</span><input type="date" name="date" required value="${escape(value(["date"], new Date().toISOString().slice(0, 10)))}"></label>
         <label class="admin-field"><span>URL identifikators</span><input name="slug" value="${escape(value(["slug"]))}" placeholder="izveidosies-no-virsraksta"></label>
       </div>
-      <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="post-image" name="image" value="${escape(value(["image"], "/media/MASKA_small_vertical.jpg"))}"><label class="upload-button">Augšupielādēt<input id="media-upload" type="file" accept="image/*,audio/*,.pdf" hidden></label></div></label>
+      <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="post-image" name="image" value="${escape(value(["image"], "/media/maska-placeholder.jpg"))}"><label class="upload-button">Augšupielādēt<input id="media-upload" type="file" accept="image/*,audio/*,.pdf" hidden></label></div></label>
       <div class="admin-language-grid">
         ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
           <label class="admin-field"><span>Virsraksts</span><input name="title.${language}" ${language === "lv" ? "required" : ""} value="${escape(value(["title", language]))}"></label>
@@ -132,6 +191,26 @@ const videoForm = (item) => `
   <label class="admin-field"><span>Video nosaukums</span><input name="title" required value="${escape(item?.title || "")}"></label>
   <label class="admin-field"><span>YouTube saite vai ID</span><input name="youtubeId" required value="${escape(item?.youtubeId || "")}" placeholder="https://www.youtube.com/watch?v=..."></label>`;
 
+const carouselForm = (item) => `
+  <label class="admin-field"><span>Attēla ceļš</span><div class="media-input"><input id="carousel-image" name="image" required value="${escape(item?.image || "")}" placeholder="/media/slide1.jpg"><label class="upload-button">Augšupielādēt<input data-upload-target="#carousel-image" type="file" accept="image/*" hidden></label></div></label>
+  <p class="admin-help">Karuselis rāda attēlu ainavas rāmī 16:10, tāpat kā jaunumu sīktēlu. Cita proporcija tiek aizpildīta līdz malām.</p>
+  <div class="admin-language-grid">
+    ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
+      <label class="admin-field"><span>Alt teksts</span><input name="alt.${language}" value="${escape(item?.alt?.[language] || "")}" placeholder="Īss apraksts (nav obligāts)"></label>
+    </fieldset>`).join("")}
+  </div>`;
+
+const personForm = (item) => `
+  <label class="admin-field"><span>Vārds</span><input name="name" required value="${escape(item?.name || "")}"></label>
+  <label class="admin-field"><span>Foto</span><div class="media-input"><input id="person-image" name="photo" value="${escape(item?.photo || "")}" placeholder="/media/..."><label class="upload-button">Augšupielādēt<input data-upload-target="#person-image" type="file" accept="image/*" hidden></label></div></label>
+  <div class="admin-language-grid">
+    ${["lv", "en"].map((language) => `<fieldset><legend>${language.toUpperCase()}</legend>
+      <label class="admin-field"><span>Amats</span><input name="occupation.${language}" ${language === "lv" ? "required" : ""} value="${escape(item?.occupation?.[language] || "")}" placeholder="Diriģents"></label>
+      <label class="admin-field"><span>Iezīme</span><input name="label.${language}" value="${escape(item?.label?.[language] || "")}" placeholder="Mākslinieciskais vadītājs"></label>
+      <label class="admin-field"><span>Teksts</span><textarea name="text.${language}" rows="8">${escape(item?.text?.[language] || "")}</textarea></label>
+    </fieldset>`).join("")}
+  </div>`;
+
 const collectionView = (content) => {
   if (activeTab === "achievements") {
     const items = achievementItems(content);
@@ -152,6 +231,28 @@ const collectionView = (content) => {
       form: albumForm
     });
   }
+  if (activeTab === "people") {
+    return listEditor({
+      kind: "people",
+      items: (content.people || []).map((item) => ({ raw: item, meta: item.occupation?.lv || item.occupation?.en || "", label: item.name })),
+      labels: { kicker: "Par kori", title: "Cilvēki", lead: "Pirmais ieraksts ir Jānis Ozols lapas Par kori sākumā. Pārējiem foto pārmaiņus ir pa labi un pa kreisi.", add: "Jauns cilvēks" },
+      emptyTitle: "Pievienot cilvēku",
+      form: personForm
+    });
+  }
+  if (activeTab === "carousel") {
+    return listEditor({
+      kind: "carousel",
+      items: (content.carousel || []).map((item) => ({
+        raw: item,
+        meta: "Sākums",
+        label: String(item.image || "").split("/").pop() || "Attēls"
+      })),
+      labels: { kicker: "Sākums", title: "Karuselis", lead: "Sākuma lapas attēli blakus sadaļai Par kori. Secība ir tāda pati kā sarakstā. Dzēs, lai noņemtu no karuseļa.", add: "Jauns attēls" },
+      emptyTitle: "Pievienot attēlu",
+      form: carouselForm
+    });
+  }
   return listEditor({
     kind: "videos",
     items: (content.videos || []).map((item) => ({ raw: item, meta: item.youtubeId, label: item.title })),
@@ -167,6 +268,8 @@ export const adminView = (content, posts) => {
     ["site", "Vietnes saturs"],
     ["posts", `Jaunumi <span>${posts.length}</span>`],
     ["achievements", `Sasniegumi <span>${(content.achievements?.lv || []).length}</span>`],
+    ["people", `Cilvēki <span>${(content.people || []).length}</span>`],
+    ["carousel", `Karuselis <span>${(content.carousel || []).length}</span>`],
     ["albums", `Albumi <span>${(content.albums || []).length}</span>`],
     ["videos", `Video <span>${(content.videos || []).length}</span>`]
   ];
@@ -180,7 +283,7 @@ export const adminView = (content, posts) => {
         </aside>
         <section class="admin-main">
           ${activeTab === "site" ? `
-            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, albumus un video pievieno atsevišķās sadaļās.</p></div>
+            <div class="admin-title"><p class="admin-kicker">Visas lapas</p><h1>Vietnes saturs</h1><p>Rediģē tekstus un kontaktinformāciju. Sasniegumus, cilvēkus, karuseļa attēlus, albumus un video pievieno atsevišķās sadaļās.</p></div>
             <form id="quick-site-form" class="admin-content-form">
               <details open><summary>Kontaktinformācija</summary><div class="admin-form-grid">${detailFields(content)}</div></details>
               <details><summary>Latviešu teksti</summary><div class="admin-form-grid">${stringFields(content, "lv")}</div></details>
@@ -221,6 +324,10 @@ const writeCollection = (updated, kind, items) => {
     return;
   }
   updated[kind] = items;
+  if (kind === "people" && items[0]) {
+    updated.details = { ...updated.details, conductor: items[0].name || updated.details.conductor };
+    updated.media = { ...updated.media, conductorPortrait: items[0].photo || updated.media.conductorPortrait };
+  }
 };
 
 const itemFromForm = (kind, data) => {
@@ -238,6 +345,21 @@ const itemFromForm = (kind, data) => {
       image: String(data.get("image") || "").trim(),
       url: String(data.get("url") || "").trim(),
       description: { lv: String(data.get("description.lv") || "").trim(), en: String(data.get("description.en") || "").trim() }
+    };
+  }
+  if (kind === "carousel") {
+    return {
+      image: String(data.get("image") || "").trim(),
+      alt: { lv: String(data.get("alt.lv") || "").trim(), en: String(data.get("alt.en") || "").trim() }
+    };
+  }
+  if (kind === "people") {
+    return {
+      name: String(data.get("name") || "").trim(),
+      photo: String(data.get("photo") || "").trim(),
+      occupation: { lv: String(data.get("occupation.lv") || "").trim(), en: String(data.get("occupation.en") || "").trim() },
+      label: { lv: String(data.get("label.lv") || "").trim(), en: String(data.get("label.en") || "").trim() },
+      text: { lv: String(data.get("text.lv") || "").trim(), en: String(data.get("text.en") || "").trim() }
     };
   }
   return {
@@ -313,7 +435,10 @@ export function bindAdmin({ content, posts, refresh, navigate }) {
         const target = upload.dataset.uploadTarget
           ? document.querySelector(upload.dataset.uploadTarget)
           : document.querySelector("#post-image");
-        if (target) target.value = result.path;
+        if (target) {
+          target.value = result.path;
+          showStatus(upload.closest("form"), "Foto pievienots. Saglabā, lai tas parādītos lapā.");
+        }
       } catch (exception) {
         showStatus(upload.closest("form"), exception.message, true);
       }
@@ -339,9 +464,14 @@ export function bindAdmin({ content, posts, refresh, navigate }) {
   });
   document.querySelector("#delete-post")?.addEventListener("click", async () => {
     if (!confirm("Vai tiešām dzēst šo ierakstu?")) return;
-    await request(`/api/admin/posts/${selectedPostId}`, { method: "DELETE" });
-    selectedPostId = null;
-    await refresh(true);
+    const form = document.querySelector("#post-form");
+    try {
+      await request(`/api/admin/posts/${selectedPostId}`, { method: "DELETE" });
+      selectedPostId = null;
+      await refresh(true);
+    } catch (exception) {
+      showStatus(form, exception.message, true);
+    }
   });
 
   document.querySelectorAll("[data-kind]").forEach((form) => form.addEventListener("submit", async (event) => {
