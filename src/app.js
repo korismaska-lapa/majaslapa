@@ -122,13 +122,13 @@ function joinBand() {
   </section>`;
 }
 
-function programmeCard(item) {
-  const post = posts.find((candidate) => candidate.slug === item.postSlug);
-  const destination = post ? postHref(post) : href("concerts");
-  return `<a class="programme" href="${destination}" data-route>
-    <span class="tag">${escapeHtml(item.tag)}</span>
-    <h3>${escapeHtml(item.title)} <span aria-hidden="true">→</span></h3>
-    <p>${escapeHtml(item.text)}</p>
+function homeNewsSideCard(post) {
+  const title = escapeHtml(post.title[state.lang] || post.title.lv);
+  const excerpt = escapeHtml(post.excerpt[state.lang] || post.excerpt.lv);
+  return `<a class="programme" href="${postHref(post)}" data-route>
+    <span class="tag">${formatDate(post.date)}</span>
+    <h3>${title} <span aria-hidden="true">→</span></h3>
+    ${excerpt ? `<p>${excerpt}</p>` : ""}
   </a>`;
 }
 
@@ -167,7 +167,7 @@ function home() {
         <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link home-news-archive" href="${href("concerts")}" data-route>${c.allNews}</a></div>
         <div class="feature-grid">
           ${posts[0] ? `<a class="feature-card" href="${postHref(posts[0])}" data-route>${postImg(posts[0])}<div class="card-body"><span class="tag">${c.news} · ${formatDate(posts[0].date)}</span><h3>${escapeHtml(posts[0].title[state.lang] || posts[0].title.lv)}</h3><p>${escapeHtml(posts[0].excerpt[state.lang] || posts[0].excerpt.lv)}</p></div></a>` : ""}
-          <div class="programme-list">${site.programmes[state.lang].map(programmeCard).join("")}</div>
+          <div class="programme-list">${posts.slice(1, 4).map(homeNewsSideCard).join("")}</div>
         </div>
       </section>
       <section class="section home-music"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
