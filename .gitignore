@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+public/media/voices/
+public/media/uploads/
+*.log
+.DS_Store
+Thumbs.db
+support.js
+"Koris MASKA - Home.dc.html"
+reference/
