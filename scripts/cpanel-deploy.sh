@@ -131,7 +131,8 @@ fi
 pick_node() {
   NPM=""
   NODE=""
-  for version in 22 20 18 16; do
+  # Prefer 20/18 on shared hosting — Node 22 Vite often dies with Wasm OOM.
+  for version in 20 18 16 22; do
     if [ -x "$APP_VENV/$version/bin/npm" ]; then
       NPM="$APP_VENV/$version/bin/npm"
       NODE="$APP_VENV/$version/bin/node"
@@ -144,13 +145,13 @@ pick_node() {
     fi
   done
   for candidate in \
-    /opt/alt/alt-nodejs22/root/usr/bin/npm \
     /opt/alt/alt-nodejs20/root/usr/bin/npm \
     /opt/alt/alt-nodejs18/root/usr/bin/npm \
     /opt/alt/alt-nodejs16/root/usr/bin/npm \
-    /opt/cpanel/ea-nodejs22/bin/npm \
     /opt/cpanel/ea-nodejs20/bin/npm \
-    /opt/cpanel/ea-nodejs18/bin/npm
+    /opt/cpanel/ea-nodejs18/bin/npm \
+    /opt/alt/alt-nodejs22/root/usr/bin/npm \
+    /opt/cpanel/ea-nodejs22/bin/npm
   do
     if [ -x "$candidate" ]; then
       NPM="$candidate"
@@ -264,13 +265,14 @@ if [ -n "$NPM" ]; then
   echo "Using $($NODE -v) / npm $($NPM -v)"
   PATH="$(dirname "$NPM"):$PATH"
   export PATH
-  $NPM install --include=dev --no-audit --no-fund --no-progress
-  echo "Building frontend from src/"
-  $NPM run build
-  cp "$DEPLOYPATH/dist/app.html" "$DEPLOYPATH/index.html"
-  mkdir -p "$DEPLOYPATH/assets"
-  cp -r "$DEPLOYPATH/dist/assets/." "$DEPLOYPATH/assets/"
-  $NPM prune --omit=dev --no-audit --no-fund --no-progress
+  # Do not Vite-build on cPanel: Node 22 hits Wasm OOM and even Node 20 is tight.
+  # Frontend ships as committed index.html + assets/ (npm run build:static before push).
+  $NPM install --omit=dev --no-audit --no-fund --no-progress
+  if [ -f "$DEPLOYPATH/index.html" ] && [ -d "$DEPLOYPATH/assets" ]; then
+    echo "Using committed frontend assets from git"
+  else
+    echo "WARNING: index.html/assets missing after copy — run npm run build:static locally and push"
+  fi
 else
   echo "Node 16+ was not found for npm install. Admin and mail still work through PHP."
 fi
