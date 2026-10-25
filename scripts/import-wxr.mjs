@@ -76,16 +76,10 @@ const paragraphs = (value) => {
     .filter((part) => part.length > 2);
 };
 
-const images = [
-  "/media/MASKA-pie-ESTONIA.jpg",
-  "/media/054Mixed-Choir-Maska-Letonia.jpg",
-  "/media/IMG_2232.jpg"
-];
-
 const posts = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
   .map((match) => match[1])
   .filter((item) => field(item, "wp:post_type") === "post" && field(item, "wp:status") === "publish")
-  .map((item, index) => {
+  .map((item) => {
     const rawTitle = field(item, "title");
     const rawContent = field(item, "content:encoded");
     const titleParts = languageParts(rawTitle);
@@ -96,16 +90,6 @@ const posts = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
     const enBody = clean(contentParts.en);
     const date = field(item, "wp:post_date").slice(0, 10);
     const slug = slugify(field(item, "wp:post_name")) || `news-${field(item, "wp:post_id")}`;
-    const recentImage = date.startsWith("2026") ? "/media/WhatsApp-Image-2026-07-05-at-17.47.35-scaled.jpeg"
-      : date === "2025-05-08" ? "/media/493034798_1430567188206445_113497777326511862_n.jpg"
-      : date.startsWith("2025") ? "/media/gal_561_4574.jpg"
-      : date.startsWith("2024") ? "/media/Maska-Perkons.png"
-      : date === "2023-12-03" ? "/media/ZieMASKAsvetki_2023.jpg"
-      : date.startsWith("2023") ? "/media/CODICF227-1.jpg"
-      : date.startsWith("2022") ? "/media/Baobabs_variants_2_png-01.png"
-      : date.startsWith("2019") ? "/media/Maska_dziesmu_kari.png"
-      : images[index % images.length];
-
     return {
       id: Number(field(item, "wp:post_id")),
       slug,
@@ -119,7 +103,7 @@ const posts = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
         lv: paragraphs(contentParts.lv || contentParts.en),
         en: paragraphs(contentParts.en)
       },
-      image: recentImage
+      image: ""
     };
   })
   .sort((a, b) => b.date.localeCompare(a.date));

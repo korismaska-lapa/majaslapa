@@ -16,8 +16,7 @@ const port = Number(process.env.PORT) || 5173;
 const host = process.env.HOST || (production ? "0.0.0.0" : "127.0.0.1");
 
 if (production && !process.env.ADMIN_PASSWORD) {
-  console.error("Set ADMIN_PASSWORD before starting in production.");
-  process.exit(1);
+  console.warn("ADMIN_PASSWORD is unset; using the local default (123). Set ADMIN_PASSWORD for a stronger password.");
 }
 
 const copyIfMissing = async (from, to) => {
@@ -72,6 +71,15 @@ const safeEqual = (left, right) => {
   const a = Buffer.from(String(left));
   const b = Buffer.from(String(right));
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+const sessionCookie = (request, token) => {
+  const proto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+  const https = request.secure || proto === "https";
+  const value = token
+    ? `maska_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`
+    : "maska_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0";
+  return https ? `${value}; Secure` : value;
 };
 
 const atomicJsonWrite = async (path, value) => {
@@ -150,14 +158,14 @@ app.post("/api/login", (request, response) => {
   loginAttempts.delete(key);
   const token = crypto.randomBytes(32).toString("base64url");
   sessions.set(token, { expires: Date.now() + 12 * 60 * 60 * 1000 });
-  response.set("Set-Cookie", `maska_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${production ? "; Secure" : ""}`);
+  response.set("Set-Cookie", sessionCookie(request, token));
   response.json({ authenticated: true });
 });
 
-app.post("/api/logout", (_request, response) => {
-  const token = parseCookies(_request.headers.cookie).maska_session;
+app.post("/api/logout", (request, response) => {
+  const token = parseCookies(request.headers.cookie).maska_session;
   if (token) sessions.delete(token);
-  response.set("Set-Cookie", "maska_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0");
+  response.set("Set-Cookie", sessionCookie(request, ""));
   response.json({ authenticated: false });
 });
 
@@ -245,6 +253,7 @@ app.use((error, _request, response, _next) => {
 });
 
 app.listen(port, host, () => {
-  console.log(`MASKA CMS running at http://${host}:${port}`);
-  if (!process.env.ADMIN_PASSWORD) console.log("Using temporary admin password from project brief.");
+  console.log(`MASKA site running at http://127.0.0.1:${port}`);
+  if (host === "0.0.0.0") console.log(`Other devices on the same network: http://<this-PC-IPv4>:${port}`);
+  if (!process.env.ADMIN_PASSWORD) console.log("Admin /login uses the local default password.");
 });

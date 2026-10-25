@@ -33,6 +33,25 @@ const href = (name = "") => `${state.lang === "en" ? "/en" : ""}${name && name !
 const postHref = (post) => href(`news/${encodeURIComponent(post.slug)}`);
 const t = () => copy[state.lang];
 const escapeHtml = (value = "") => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+const FALLBACK_POST_IMAGE = "/media/maska-logo.png";
+const postImage = (post) => String(post?.image || "").trim() || FALLBACK_POST_IMAGE;
+const postImg = (post) => {
+  const src = postImage(post);
+  const fallbackClass = src === FALLBACK_POST_IMAGE ? " logo-fallback" : "";
+  return `<img src="${escapeHtml(src)}" alt="" loading="lazy" class="${fallbackClass.trim()}" onerror="this.onerror=null;this.src='${FALLBACK_POST_IMAGE}';this.classList.add('logo-fallback')">`;
+};
+const youtubeUrlRe = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})[^\s]*/gi;
+const youtubeEmbed = (id) => `<div class="article-embed video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+function renderArticleParagraph(paragraph, index) {
+  const ids = [];
+  const text = String(paragraph).replace(youtubeUrlRe, (_, id) => {
+    if (!ids.includes(id)) ids.push(id);
+    return " ";
+  }).replace(/\s+/g, " ").trim();
+  const embeds = ids.map(youtubeEmbed).join("");
+  if (!text) return embeds;
+  return `<p${index === 0 ? " class=\"article-lead\"" : ""}>${escapeHtml(text)}</p>${embeds}`;
+}
 
 function header() {
   const current = route() === "article" ? "concerts" : route();
@@ -69,9 +88,9 @@ function footer() {
     </footer>`;
 }
 
-const pageHero = (eyebrow, title, lead, image) => `
-  <section class="page-hero" style="--hero-image:url('${image}')">
-    <div class="page-hero-inner"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1><p>${lead}</p></div>
+const pageHero = (eyebrow, title, lead, image, extraClass = "") => `
+  <section class="page-hero${extraClass ? ` ${extraClass}` : ""}" style="--hero-image:url('${image}')">
+    <div class="page-hero-inner"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${lead ? `<p>${lead}</p>` : ""}</div>
   </section>`;
 
 function joinBand() {
@@ -88,13 +107,13 @@ function joinBand() {
   </section>`;
 }
 
-function programmeCard(item) {
-  const post = posts.find((candidate) => candidate.slug === item.postSlug);
-  const destination = post ? postHref(post) : href("concerts");
-  return `<a class="programme" href="${destination}" data-route>
-    <span class="tag">${escapeHtml(item.tag)}</span>
-    <h3>${escapeHtml(item.title)} <span aria-hidden="true">→</span></h3>
-    <p>${escapeHtml(item.text)}</p>
+function homeNewsSideCard(post) {
+  const title = escapeHtml(post.title[state.lang] || post.title.lv);
+  const excerpt = escapeHtml(post.excerpt[state.lang] || post.excerpt.lv);
+  return `<a class="programme" href="${postHref(post)}" data-route>
+    <span class="tag">${formatDate(post.date)}</span>
+    <h3>${title} <span aria-hidden="true">→</span></h3>
+    ${excerpt ? `<p>${excerpt}</p>` : ""}
   </a>`;
 }
 
@@ -114,8 +133,8 @@ function home() {
       <section class="section surface">
         <div class="section-head"><div><h2 class="section-title">${c.concertsNews}</h2><div class="rule"></div></div><a class="text-link" href="${href("concerts")}" data-route>${c.allNews}</a></div>
         <div class="feature-grid">
-          ${posts[0] ? `<a class="feature-card" href="${postHref(posts[0])}" data-route><img src="${posts[0].image}" alt=""><div class="card-body"><span class="tag">${c.news} · ${formatDate(posts[0].date)}</span><h3>${escapeHtml(posts[0].title[state.lang] || posts[0].title.lv)}</h3><p>${escapeHtml(posts[0].excerpt[state.lang] || posts[0].excerpt.lv)}</p></div></a>` : ""}
-          <div class="programme-list">${site.programmes[state.lang].map(programmeCard).join("")}</div>
+          ${posts[0] ? `<a class="feature-card" href="${postHref(posts[0])}" data-route>${postImg(posts[0])}<div class="card-body"><span class="tag">${c.news} · ${formatDate(posts[0].date)}</span><h3>${escapeHtml(posts[0].title[state.lang] || posts[0].title.lv)}</h3><p>${escapeHtml(posts[0].excerpt[state.lang] || posts[0].excerpt.lv)}</p></div></a>` : ""}
+          <div class="programme-list">${posts.slice(1, 4).map(homeNewsSideCard).join("")}</div>
         </div>
       </section>
       <section class="section"><h2 class="section-title">${c.musicTitle}</h2><div class="rule"></div><p class="prose">${c.musicLead}</p>
@@ -162,7 +181,7 @@ function concerts() {
 function newsCard(post) {
   const title = escapeHtml(post.title[state.lang] || post.title.lv);
   const excerpt = escapeHtml(post.excerpt[state.lang] || post.excerpt.lv);
-  return `<a class="news-card" data-post-year="${post.date.slice(0, 4)}" href="${postHref(post)}" data-route><img src="${post.image}" alt="" loading="lazy"><div class="news-card-body"><span class="date">${formatDate(post.date)}</span><h2>${title}</h2>${excerpt ? `<p>${excerpt}</p>` : ""}</div></a>`;
+  return `<a class="news-card" data-post-year="${post.date.slice(0, 4)}" href="${postHref(post)}" data-route>${postImg(post)}<div class="news-card-body"><span class="date">${formatDate(post.date)}</span><h2>${title}</h2>${excerpt ? `<p>${excerpt}</p>` : ""}</div></a>`;
 }
 
 function article() {
@@ -180,12 +199,12 @@ function article() {
   const nextPost = posts[currentIndex + 1];
 
   return `<main id="main">
-    ${pageHero(`${c.news} · ${formatDate(post.date)}`, title, escapeHtml(post.excerpt[state.lang] || post.excerpt.lv), post.image)}
+    ${pageHero(`${c.news} · ${formatDate(post.date)}`, title, "", postImage(post), `article-hero${postImage(post) === FALLBACK_POST_IMAGE ? " logo-fallback" : ""}`)}
     <article class="section article-layout">
-      <aside class="article-aside"><a class="text-link" href="${href("concerts")}" data-route>← ${c.allNews}</a><div class="article-meta"><span>${formatDate(post.date)}</span><span>Koris MASKA</span></div></aside>
+      <aside class="article-aside"><a class="text-link" href="${href("concerts")}" data-route>← ${c.allNews}</a></aside>
       <div class="article-body">
         ${fallback ? `<p class="translation-note">${state.lang === "lv" ? "" : "This archive article is currently available in Latvian."}</p>` : ""}
-        ${body.map((paragraph, index) => index === 0 ? `<p class="article-lead">${escapeHtml(paragraph)}</p>` : `<p>${escapeHtml(paragraph)}</p>`).join("")}
+        ${body.map((paragraph, index) => renderArticleParagraph(paragraph, index)).join("")}
         ${nextPost ? `<a class="next-article" href="${postHref(nextPost)}" data-route><span>${state.lang === "lv" ? "Nākamais arhīvā" : "Next in the archive"}</span><strong>${escapeHtml(nextPost.title[state.lang] || nextPost.title.lv)}</strong> →</a>` : ""}
       </div>
     </article>

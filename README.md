@@ -22,6 +22,32 @@ npm run build
 The application now runs through `server.mjs`; this is required for the content manager and
 file persistence.
 
+## Run with Docker
+
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/), then from this folder:
+
+```bash
+docker compose up -d --build
+```
+
+- Site: http://127.0.0.1:5173
+- Login: http://127.0.0.1:5173/login
+- Admin password: set `ADMIN_PASSWORD` in the environment or a local `.env` (copy `.env.example`). This machine has used `123` for local Docker, for example `ADMIN_PASSWORD=123 docker compose up -d --build`. Do not commit a real `.env`.
+
+Persisted data stays on the host, not in the image:
+
+| Host path | Container path | What it holds |
+| --- | --- | --- |
+| `./content` | `/app/content` | `site.json`, `voices.json`, news posts |
+| `./public/media/uploads` | `/app/public/media/uploads` | CMS uploads |
+| `./public/media/voices` | `/app/public/media/voices` | rehearsal MP3s (~1.5 GB) |
+
+`DATA_DIR` is left unset so the server uses those folders directly. Voice files are bind-mounted and are never `COPY`ed into the image. Sessions are cookie + in-memory, so there is no session mount.
+
+If something else is already listening on 5173 (for example `start-host.bat`), stop that process first or change the left-hand port in `docker-compose.yml`.
+
+`start-host.bat` remains the bare-metal option. Docker is an additional path.
+
 ## Host on Railway
 
 This is a Node app, not a static site. Railway (or any always-on Node host) can serve the

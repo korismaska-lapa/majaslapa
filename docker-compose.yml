@@ -1,0 +1,34 @@
+# Koris MASKA — local Docker host
+#
+#   docker compose up -d --build
+#
+# Site:  http://127.0.0.1:5173
+# Login: http://127.0.0.1:5173/login
+#
+# All CMS/user data stays on this PC via bind mounts (not in the image):
+#   ./content                 site copy, contacts, posts, voices catalogue
+#   ./public/media/uploads    uploaded images / audio / PDFs
+#   ./public/media/voices     rehearsal MP3s (~1.5 GB) — never copied into the image
+#
+# DATA_DIR is left unset so the app reads/writes those default folders.
+# Sessions are in-memory cookies; no session directory to mount.
+#
+# Admin password: set ADMIN_PASSWORD in the environment or a local .env file.
+# This machine has used 123 — e.g.  ADMIN_PASSWORD=123 docker compose up -d
+# Do not commit a real .env. Copy .env.example if you want a starting file.
+
+services:
+  web:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 5173
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-123}
+    volumes:
+      - ./content:/app/content
+      - ./public/media/uploads:/app/public/media/uploads
+      - ./public/media/voices:/app/public/media/voices
+    restart: unless-stopped
