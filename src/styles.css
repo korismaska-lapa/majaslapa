@@ -664,6 +664,35 @@ button { cursor: pointer; }
   background: var(--surface);
 }
 .contact-grid .section-title { margin-bottom: 18px; }
+.support-section { padding-top: 0; }
+.support-copy { max-width: 78ch; font-size: 15px; line-height: 1.78; }
+.support-copy p { margin: 0 0 16px; }
+.support-copy a { color: var(--teal-dark); text-decoration: underline; text-underline-offset: 3px; }
+.support-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 4vw, 48px); margin-top: 28px; }
+.support-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+.support-grid h3 { margin: 0; font: 600 15px/1.3 var(--display); letter-spacing: .06em; text-transform: uppercase; }
+.copy-requisites {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #515a62;
+  cursor: pointer;
+}
+.copy-requisites svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.copy-requisites .icon-check { display: none; }
+.copy-requisites:hover,
+.copy-requisites.is-copied { color: var(--teal-dark); }
+.support-heading .copy-requisites { background: var(--surface); }
+.copy-requisites.is-copied .icon-copy { display: none; }
+.copy-requisites.is-copied .icon-check { display: block; }
+.contact-item-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.contact-item-copy > div { min-width: 0; }
+.contact-item-copy .copy-requisites { width: 28px; height: 28px; }
 .join-expect .contact-item {
   padding: 18px 0;
   background: transparent;
@@ -909,7 +938,7 @@ button { cursor: pointer; }
   .hero::after { background: linear-gradient(0deg, rgba(20,25,29,.98) 0%, rgba(20,25,29,.82) 58%, rgba(20,25,29,.28) 100%); }
   .hero-content { padding-top: calc(68px + 48px); }
   .section-head { align-items: start; flex-direction: column; }
-  .music-cards, .album-grid, .news-grid, .achievement-grid, .video-grid, .voice-grid, .join-band, .contact-grid, .join-place { grid-template-columns: 1fr; }
+  .music-cards, .album-grid, .news-grid, .achievement-grid, .video-grid, .voice-grid, .join-band, .contact-grid, .join-place, .support-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; }
   .admin-main { padding: 24px 16px; }

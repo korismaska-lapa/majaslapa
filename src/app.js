@@ -13,6 +13,7 @@ const state = {
   adminAuthenticated: false
 };
 
+const seedSite = structuredClone(defaultSite);
 let site = structuredClone(defaultSite);
 let copy = site.copy;
 let posts = [...builtInPosts];
@@ -355,6 +356,36 @@ function applicationForm(c) {
   </form>`;
 }
 
+function copyButton(label, { kind, value } = {}) {
+  const source = value != null ? `data-copy-value="${escapeHtml(value)}"` : `data-copy-kind="${kind}"`;
+  return `<button class="copy-requisites" type="button" ${source} aria-label="${escapeHtml(label)}"><svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M6 16H5.5A1.5 1.5 0 0 1 4 14.5v-10A1.5 1.5 0 0 1 5.5 3h10A1.5 1.5 0 0 1 17 4.5V6"/></svg><svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 9.5 17 19 7"/></svg></button>`;
+}
+
+function copyValueRow(label, value) {
+  const caption = label ? `<span>${label}</span>` : "";
+  const content = label ? escapeHtml(value) : `<strong>${escapeHtml(value)}</strong>`;
+  return `<div class="contact-item contact-item-copy"><div>${caption}${content}</div>${copyButton(t().copyRequisites, { value })}</div>`;
+}
+
+function requisitesText(kind) {
+  const c = t();
+  const d = site.details;
+  const org = d.supportOrg;
+  if (kind === "payment") {
+    return [
+      org,
+      `${c.bank}: ${d.supportBank}`,
+      `${c.bicLabel}: ${d.supportBic}`,
+      `${c.account}: ${d.supportIban}`
+    ].join("\n");
+  }
+  return [
+    org,
+    `${c.legalAddress}: ${d.supportAddress}`,
+    `${c.regNo} ${d.supportRegNo}, ${c.taxNo} ${d.supportTaxNo}`
+  ].join("\n");
+}
+
 function contact() {
   const c = t();
   const d = site.details;
@@ -364,12 +395,44 @@ function contact() {
       <div><h2 class="section-title">${c.contact}</h2><div class="rule"></div><div class="contact-list"><div class="contact-item"><span>${c.general}</span><a href="mailto:${d.generalEmail}">${d.generalEmail}</a></div><div class="contact-item"><span>${c.president}</span><strong>${d.president}</strong><br><a href="mailto:${d.presidentEmail}">${d.presidentEmail}</a> · <a href="tel:${d.phoneHref}">${d.phone}</a></div><div class="contact-item"><span>${c.social}</span><a href="${d.facebook}" target="_blank">Facebook — Koris MASKA</a><br><a href="${d.instagram}" target="_blank">Instagram — @korismaska</a></div><div class="contact-item"><span>${c.location}</span><a href="${d.mapUrl}" target="_blank">${d.address}</a></div></div></div>
       <div><h2 class="section-title">${c.writeUs}</h2><div class="rule"></div><form class="form mail-form" data-kind="contact"><div class="field"><label for="contact-name">${c.name}</label><input id="contact-name" name="name" required autocomplete="name"></div><div class="field"><label for="contact-email">${c.email}</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="subject">${c.subject}</label><input id="subject" name="subject" required></div><div class="field"><label for="contact-message">${c.question}</label><textarea id="contact-message" name="message" required></textarea></div><div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit">${c.sendMessage}</button><p class="form-note">${c.privacy}</p></form></div>
     </section>
+    <section class="section support-section">
+      <h2 class="section-title">${c.supportTitle}</h2>
+      <div class="rule"></div>
+      <div class="support-copy">
+        <p>${c.supportP1} <a href="${escapeHtml(d.supportVidUrl)}" target="_blank" rel="noreferrer">${c.supportVid}</a>.</p>
+        <p>${c.supportP2}</p>
+      </div>
+      <div class="support-grid">
+        <div>
+          <div class="support-heading"><h3>${c.supportDetailsTitle}</h3>${copyButton(c.copyRequisites, { kind: "association" })}</div>
+          <div class="contact-list">
+            ${copyValueRow("", d.supportOrg)}
+            ${copyValueRow(c.legalAddress, d.supportAddress)}
+            ${copyValueRow(c.regNo, d.supportRegNo)}
+            ${copyValueRow(c.taxNo, d.supportTaxNo)}
+          </div>
+        </div>
+        <div>
+          <div class="support-heading"><h3>${c.paymentTitle}</h3>${copyButton(c.copyRequisites, { kind: "payment" })}</div>
+          <div class="contact-list">
+            ${copyValueRow("", d.supportOrg)}
+            ${copyValueRow(c.bank, d.supportBank)}
+            ${copyValueRow(c.bicLabel, d.supportBic)}
+            ${copyValueRow(c.account, d.supportIban)}
+          </div>
+        </div>
+      </div>
+    </section>
   </main>`;
 }
 
 function applyContent(content) {
   if (!content?.site?.copy) return false;
   site = content.site;
+  for (const lang of ["lv", "en"]) {
+    site.copy[lang] = { ...seedSite.copy[lang], ...(site.copy[lang] || {}) };
+  }
+  site.details = { ...seedSite.details, ...(site.details || {}) };
   copy = site.copy;
   if (!Array.isArray(site.carousel)) site.carousel = defaultCarousel();
   if (Array.isArray(content.posts)) posts = content.posts;
@@ -489,6 +552,29 @@ function bind() {
     return;
   }
   bindCarousel();
+  document.querySelectorAll("[data-copy-kind], [data-copy-value]").forEach((button) => button.addEventListener("click", async () => {
+    const text = button.dataset.copyValue ?? requisitesText(button.dataset.copyKind);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    button.classList.add("is-copied");
+    button.setAttribute("aria-label", t().copied);
+    clearTimeout(button.copyTimer);
+    button.copyTimer = setTimeout(() => {
+      button.classList.remove("is-copied");
+      button.setAttribute("aria-label", t().copyRequisites);
+    }, 1600);
+  }));
   document.querySelector(".menu-toggle")?.addEventListener("click", () => {
     state.menu = !state.menu;
     document.body.classList.toggle("menu-open", state.menu);
